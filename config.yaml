@@ -1,0 +1,22 @@
+qdrant:
+  collection_name: "legal_docs"
+
+models:
+  embedding: "intfloat/multilingual-e5-small"
+  #"BAAI/bge-m3"
+  llm: "qwen2.5:3b"
+chunking:
+  thresh_dieu: 600
+  thresh_khoan_default: 500
+  min_chunk: 30
+  min_chunk_diem: 5
+
+retrieval:
+  top_k: 10
+  use_reranker: false
+  reranker_model: "BAAI/bge-reranker-v2-m3"
+  top_k_raw: 30
+
+llm_params:
+  provider: "gemini" # "gemini" or "ollama"
+  model: "gemini-3.6-flash" # "gemini-3.6-flash" or "qwen2.5:3b"
