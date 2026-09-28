@@ -40,8 +40,7 @@ async def lifespan(app: FastAPI):
         rag_components["chain"] = qa_chain
         print("✅ Đã khởi tạo thành công RAG Chain!")
     except Exception as e:
-        print("⚠️ Lỗi khởi tạo RAG (Collection chưa tồn tại?):", e)
-        print("👉 Nếu bạn vừa đổi Collection mới, hãy gọi API /api/ingest để đẩy dữ liệu lên trước khi Chat!")
+        print(e)
     yield
 
     rag_components.clear()
