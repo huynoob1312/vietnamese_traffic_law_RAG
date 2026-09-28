@@ -22,4 +22,9 @@ qdrant_storage/
 .DS_Store
 Thumbs.db
 
-./scripts/chunk_preview.jsonl
+scripts/*.jsonl
+
+# Benchmark datasets & external docs
+benchmark/data_ngoai/*
+benchmark/*.jsonl
+benchmark/*.csv

@@ -3,7 +3,7 @@ import random
 import os
 
 def view_beautiful_json(num_samples=5, random_pick=False):
-    jsonl_file = "chunk_preview.jsonl"
+    jsonl_file = '.\scripts\chunk_preview.jsonl'
     
     if not os.path.exists(jsonl_file):
         print(f"Lỗi: Không tìm thấy file {jsonl_file}. Hãy chạy test_chunking.py trước.")

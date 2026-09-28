@@ -1,4 +1,5 @@
 import re
+import os
 from typing import List
 from langchain_core.documents import Document
 
@@ -125,7 +126,16 @@ class LegalDocumentChunker:
         articles = self._split_into_articles(full_text)
         chunks = []
 
-        ten_van_ban = doc_meta.get("source", "Không rõ nguồn").split("/")[-1]
+        file_name = os.path.basename(doc_meta.get("source", "Không rõ nguồn"))
+        
+        # Dịch tên file (Ví dụ: 35_2024_QH15_588811.docx -> Luật số 35/2024/QH15)
+        # Giúp Tokenizer (BM25) bắt chuẩn 100% các từ khóa như "35", "2024"
+        m = re.match(r"(\d+)_(\d+)_([A-Za-z0-9]+)", file_name)
+        if m:
+            so, nam, ky_hieu = m.groups()
+            ten_van_ban = f"Văn bản số {so}/{nam}/{ky_hieu}"
+        else:
+            ten_van_ban = file_name
 
         for dieu_num, dieu_title, dieu_content in articles:
             if count_tokens(dieu_content) < MIN_CHUNK:

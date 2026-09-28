@@ -5,6 +5,8 @@ langchain-qdrant
 langchain-huggingface
 langchain-ollama
 langchain-google-genai
+langchain-openai
+langchain-groq
 langchain
 unstructured
 python-docx

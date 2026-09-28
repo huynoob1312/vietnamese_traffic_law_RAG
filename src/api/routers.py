@@ -1,5 +1,6 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from src.api.dependencies import get_rag_components
 from src.api.schemas import ChatRequest, ChatResponse
 from src.ingestion.docx_loader import load_and_chunk_data
@@ -45,5 +46,24 @@ async def ingest():
             "status": "success", 
             "message": f"{len(chunks)} chunk was uploaded to qdrant"
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/chat/stream", tags=["Chat"])
+async def chat_stream(request: ChatRequest, components: dict = Depends(get_rag_components)):
+    process_func = components.get("process")
+    qa_chain = components.get("chain")
+
+    if not process_func or not qa_chain:
+        raise HTTPException(status_code=503, detail="RAG legal is not ready")
+
+    try:
+        processed = process_func({"input": request.question})
+        
+        def event_generator():
+            for chunk in qa_chain.stream(processed):
+                yield chunk
+                
+        return StreamingResponse(event_generator(), media_type="text/plain")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

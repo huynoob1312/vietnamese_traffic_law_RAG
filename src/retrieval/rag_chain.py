@@ -5,7 +5,7 @@ from src.ingestion.docx_loader import load_and_chunk_data
 from src.llm.local_llm import get_llm
 from src.vectordb.qdrant_client import get_qdrant_client
 from src.prompt.legal_prompt import get_legal_prompt
-from src.utils.config import TOP_K, USE_RERANKER, RERANKER_MODEL, TOP_K_RAW, LLM_PROVIDER
+from src.utils.config import TOP_K, USE_RERANKER, RERANKER_MODEL, TOP_K_RAW, LLM_PROVIDER, SEARCH_TYPE
 from pyvi import ViTokenizer
 from sentence_transformers import CrossEncoder
 from langchain_community.retrievers import BM25Retriever
@@ -74,8 +74,8 @@ def get_ensemble_retriever(qdrant):
             all_lists = []
             
             with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-                bm25_futures = [executor.submit(bm25_retriever.invoke, q) for q in queries]
-                qdrant_futures = [executor.submit(qdrant_retriever.invoke, q) for q in queries]
+                bm25_futures = [executor.submit(bm25_retriever.invoke, q) for q in queries] if SEARCH_TYPE in ["hybrid", "bm25"] else []
+                qdrant_futures = [executor.submit(qdrant_retriever.invoke, q) for q in queries] if SEARCH_TYPE in ["hybrid", "vector"] else []
                 
                 for f in bm25_futures + qdrant_futures:
                     all_lists.append(f.result())
@@ -111,22 +111,18 @@ def get_ensemble_retriever(qdrant):
                     
                 source = doc.metadata.get("source", "")
                 dieu = str(doc.metadata.get("dieu", ""))
-                khoan_str = str(doc.metadata.get("khoan", ""))
                 
-                if not source or not dieu or not khoan_str.isdigit():
+                if not source or not dieu:
                     continue
                     
-                khoan = int(khoan_str)
+                # Lấy TOÀN BỘ các chunks khác nằm trong cùng một Điều (Sibling Chunks)
+                # Vì dieu_index được add tuần tự, nên thứ tự của siblings đã chuẩn theo văn bản gốc
                 siblings = dieu_index.get((source, dieu), [])
                 
                 for sib in siblings:
-                    sib_khoan_str = str(sib.metadata.get("khoan", ""))
-                    if sib_khoan_str.isdigit():
-                        sib_khoan = int(sib_khoan_str)
-                        if abs(sib_khoan - khoan) <= 2 and sib_khoan != khoan:
-                            if sib.page_content not in seen_contents:
-                                enriched_docs.append(sib)
-                                seen_contents.add(sib.page_content)
+                    if sib.page_content not in seen_contents:
+                        enriched_docs.append(sib)
+                        seen_contents.add(sib.page_content)
                                 
             return enriched_docs
             
@@ -142,6 +138,7 @@ Nhiệm vụ của bạn là tạo ra 3 câu truy vấn để tối ưu hóa vi�
 QUY TẮC:
 1. Tập trung chuyển đổi từ lóng sang thuật ngữ pháp lý chính xác (ví dụ: 'kẹp 3' -> 'chở quá số người', 'vượt đèn đỏ' -> 'không chấp hành đèn tín hiệu').
 2. NẾU CÂU HỎI CÓ NHIỀU LỖI VI PHẠM, hãy tách mỗi lỗi thành một câu truy vấn riêng biệt để tìm kiếm chính xác hơn.
+3. QUAN TRỌNG: Người dùng hay gọi tắt tên luật bằng số. Hãy chuyển nó thành mã hiệu đầy đủ. (Ví dụ: 'luật 35' -> 'Luật Đường bộ 35/2024', 'luật 36' -> 'Luật Trật tự an toàn giao thông 36/2024', 'nghị định 100' -> 'Nghị định 100/2019').
 Trả lời dưới dạng danh sách, mỗi câu hỏi một dòng. Không giải thích thêm.
 
 Câu hỏi gốc: {question}"""
@@ -151,6 +148,7 @@ Bạn là chuyên gia pháp lý. Nhiệm vụ của bạn là tạo ra 3 câu tr
 QUY TẮC:
 1. Chuyển đổi từ lóng sang thuật ngữ chính xác (vd: 'kẹp 3' -> 'chở quá số người').
 2. NẾU CÓ NHIỀU LỖI VI PHẠM, bắt buộc tách mỗi lỗi thành 1 câu truy vấn riêng biệt.
+3. QUAN TRỌNG: Người dùng hay gọi tắt tên luật bằng số. Hãy chuyển nó thành mã hiệu đầy đủ. (Ví dụ: 'luật 35' -> 'Luật Đường bộ 35/2024', 'luật 36' -> 'Luật Trật tự an toàn giao thông 36/2024').
 Trả lời dưới dạng danh sách, mỗi câu một dòng. TUYỆT ĐỐI không giải thích thêm.
 <|im_end|>
 <|im_start|>user
