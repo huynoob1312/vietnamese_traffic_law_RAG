@@ -20,3 +20,5 @@ uvicorn
 streamlit
 pydantic
 pyvi
+ragas
+datasets
