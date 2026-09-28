@@ -1,13 +1,13 @@
 qdrant:
   # collection_name: "legal_docs"
-  # collection_name: "legal_docs_bge"
-  collection_name: "legal_docs_sbert" 
+  collection_name: "legal_docs_bge"
+  #collection_name: "legal_docs_sbert" 
   #collection_name: "legal_docs_vietnamese_bi_encoder" 
 
 models:
   # embedding: "intfloat/multilingual-e5-small"
-  # embedding: "BAAI/bge-m3"
-  embedding: "keepitreal/vietnamese-sbert"
+  embedding: "BAAI/bge-m3"
+  # embedding: "keepitreal/vietnamese-sbert"
   # embedding: "bkai-foundation-models/vietnamese-bi-encoder"
   llm: "qwen2.5:3b"
 chunking:

@@ -11,6 +11,8 @@ class E5EmbeddingsWrapper(HuggingFaceEmbeddings):
         return super().embed_query(f"query: {text}")
 
 
+import torch
+
 def get_embedding_model():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
@@ -18,10 +20,10 @@ def get_embedding_model():
         return E5EmbeddingsWrapper(
             model_name=EMBEDDING_MODEL,
             model_kwargs={'device': device},
-            encode_kwargs={'normalize_embeddings': True}
+            encode_kwargs={'normalize_embeddings': True, 'batch_size': 16}
         )
     return HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL,
         model_kwargs={'device': device},
-        encode_kwargs={'normalize_embeddings': True}
+        encode_kwargs={'normalize_embeddings': True, 'batch_size': 16}
     )
