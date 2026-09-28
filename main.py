@@ -34,11 +34,14 @@ sys.stderr = CleanStderr(sys.stderr)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # load model
-    process_func, qa_chain = build_rag_chain()
-
-    #nap vao ram
-    rag_components["process"] = process_func
-    rag_components["chain"] = qa_chain
+    try:
+        process_func, qa_chain = build_rag_chain()
+        rag_components["process"] = process_func
+        rag_components["chain"] = qa_chain
+        print("✅ Đã khởi tạo thành công RAG Chain!")
+    except Exception as e:
+        print("⚠️ Lỗi khởi tạo RAG (Collection chưa tồn tại?):", e)
+        print("👉 Nếu bạn vừa đổi Collection mới, hãy gọi API /api/ingest để đẩy dữ liệu lên trước khi Chat!")
     yield
 
     rag_components.clear()

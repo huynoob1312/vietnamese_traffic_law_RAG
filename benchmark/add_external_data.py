@@ -3,6 +3,7 @@ import sys
 import json
 import re
 import time
+import random
 from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -111,10 +112,8 @@ def main():
         chunker = LegalDocumentChunker(doc_type=doc_type)
         chunks.extend(chunker.split_documents([doc]))
     
-    print(f"Đã đọc và cắt được {len(chunks)} chunks từ các file luật ngoài.")
     
     # Chỉ lấy ngẫu nhiên một lượng nhỏ (VD: 30 chunks) làm bẫy
-    import random
     NUM_TRAPS = 30
     sampled_chunks = random.sample(chunks, min(NUM_TRAPS, len(chunks)))
     print(f"Đã chọn ngẫu nhiên {len(sampled_chunks)} chunks làm bẫy để không làm loãng Benchmark.")
