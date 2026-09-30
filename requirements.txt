@@ -23,3 +23,8 @@ pyvi
 ragas
 datasets
 torch
+sqlalchemy
+pymysql
+cryptography
+bcrypt
+pyjwt

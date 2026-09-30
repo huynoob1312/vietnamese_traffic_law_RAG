@@ -28,3 +28,21 @@ USE_RERANKER = config.get("retrieval", {}).get("use_reranker", False)
 RERANKER_MODEL = config.get("retrieval", {}).get("reranker_model", "BAAI/bge-reranker-base")
 TOP_K_RAW = config.get("retrieval", {}).get("top_k_raw", 20)
 SEARCH_TYPE = config.get("retrieval", {}).get("search_type", "hybrid")
+
+# MySQL Configuration
+MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
+MYSQL_USER = os.getenv("MYSQL_USER", "root")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+MYSQL_DB = os.getenv("MYSQL_DB", "traffic_law_rag")
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4"
+)
+
+# JWT & Security Configuration
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "traffic-law-rag-secret-key-change-in-production-2026")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "10080"))
+

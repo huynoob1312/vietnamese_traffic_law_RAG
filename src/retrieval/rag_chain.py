@@ -156,11 +156,15 @@ Câu hỏi gốc: {question}
 <|im_end|>
 <|im_start|>assistant
 """
-    prompt = PromptTemplate(template=template, input_variables=["question"])
-    chain = prompt | llm | StrOutputParser()
-    res = chain.invoke({"question": query})
-    queries = [q.strip("- *1234567890.") for q in res.split("\n") if q.strip()]
-    return [query] + queries[:3]
+    try:
+        prompt = PromptTemplate(template=template, input_variables=["question"])
+        chain = prompt | llm | StrOutputParser()
+        res = chain.invoke({"question": query})
+        queries = [q.strip("- *1234567890.") for q in res.split("\n") if q.strip()]
+        return [query] + queries[:3]
+    except Exception as e:
+        print(f"⚠️ Không thể sinh multi-query ({e}), sử dụng truy vấn gốc.")
+        return [query]
 
 def build_rag_chain():
     qdrant = get_qdrant_client()
@@ -177,11 +181,32 @@ def build_rag_chain():
         # Gọi Global RRF bằng hàm retrieve_multi
         final_docs = retriever.retrieve_multi(queries)
         
+        # Rút trích danh sách tài liệu tham chiếu (citations)
+        citations = []
+        seen_keys = set()
+        for doc in final_docs:
+            meta = doc.metadata or {}
+            source = meta.get("source", "")
+            dieu = str(meta.get("dieu", "")) if meta.get("dieu") else ""
+            khoan = str(meta.get("khoan", "")) if meta.get("khoan") else ""
+            diem = str(meta.get("diem", "")) if meta.get("diem") else ""
+            key = (source, dieu, khoan, diem)
+            if key not in seen_keys:
+                seen_keys.add(key)
+                citations.append({
+                    "source": source,
+                    "dieu": dieu,
+                    "khoan": khoan,
+                    "diem": diem,
+                    "page_content": doc.page_content[:300] + ("..." if len(doc.page_content) > 300 else "")
+                })
+
         context = format_docs(final_docs)
-        
+
         return {
             "context": context,
-            "input": original_query
+            "input": original_query,
+            "citations": citations
         }
 
     answer_chain = prompt | llm | StrOutputParser()
