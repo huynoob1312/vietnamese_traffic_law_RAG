@@ -25,6 +25,7 @@ MIN_CHUNK_DIEM = config.get("chunking", {}).get("min_chunk_diem", 5)
 
 TOP_K = config.get("retrieval", {}).get("top_k", 3)
 USE_RERANKER = config.get("retrieval", {}).get("use_reranker", False)
+USE_MULTI_QUERY = config.get("retrieval", {}).get("use_multi_query", False)
 RERANKER_MODEL = config.get("retrieval", {}).get("reranker_model", "BAAI/bge-reranker-base")
 TOP_K_RAW = config.get("retrieval", {}).get("top_k_raw", 20)
 SEARCH_TYPE = config.get("retrieval", {}).get("search_type", "hybrid")

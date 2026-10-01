@@ -11,6 +11,7 @@ sys.path.append(os.path.abspath('.'))
 from src.vectordb.qdrant_client import get_qdrant_client
 from src.retrieval.rag_chain import get_ensemble_retriever, generate_multi_queries
 from src.llm.local_llm import get_llm
+from src.utils.config import USE_MULTI_QUERY
 from benchmark.metrics import evaluate_retrieval_metrics
 
 def main():
@@ -40,12 +41,15 @@ def main():
         ground_truth_source = item.get('chunk_source', '')
         ground_truth_dieu = str(item.get('chunk_dieu', ''))
         
-        # Xử lý Retry khi dính lỗi 429 Too Many Requests từ Gemini
+        # Xử lý Retry khi dính lỗi từ LLM
         max_retries = 5
         for attempt in range(max_retries):
             try:
-                # Sinh multi-query và truy xuất
-                queries = generate_multi_queries(question, llm)
+                if USE_MULTI_QUERY:
+                    queries = generate_multi_queries(question, llm)
+                else:
+                    queries = [question] # Dùng mỗi câu hỏi gốc, bỏ qua LLM
+                
                 retrieved_docs = retriever.retrieve_multi(queries)
                 break # Nếu thành công thì thoát vòng lặp retry
             except Exception as e:

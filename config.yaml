@@ -20,6 +20,7 @@ retrieval:
   search_type: "hybrid" # "hybrid", "bm25", "vector"
   top_k: 10
   use_reranker: false
+  use_multi_query: true
   reranker_model: "BAAI/bge-reranker-v2-m3"
   top_k_raw: 30
 
