@@ -40,9 +40,8 @@ def main():
         ground_truth_source = item.get('chunk_source', '')
         ground_truth_dieu = str(item.get('chunk_dieu', ''))
         
-        # Sinh multi-query và truy xuất
-        queries = generate_multi_queries(question, llm)
-        retrieved_docs = retriever.retrieve_multi(queries)
+        # Gọi thẳng Retriever (Bỏ qua LLM Multi-Query để tăng tốc x20 lần khi làm Ablation Study)
+        retrieved_docs = retriever.retrieve_multi([question])
         
         # Tạo định danh (ID) chuẩn
         ground_truth_id = f"{ground_truth_source}_{ground_truth_dieu}"

@@ -65,8 +65,12 @@ def get_ensemble_retriever(qdrant):
     bm25_retriever.k = TOP_K_RAW
 
     reranker = None
+    reranker_batch_size = 32
     if USE_RERANKER:
-        reranker = CrossEncoder(RERANKER_MODEL)
+        import torch
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        reranker = CrossEncoder(RERANKER_MODEL, device=device)
+        reranker_batch_size = 128 if device == 'cuda' else 32
 
     # 3. Custom Retriever (RRF/Reranker + Sibling Enrichment)
     class CustomEnsembleRetriever:
@@ -91,7 +95,7 @@ def get_ensemble_retriever(qdrant):
                 
                 # Chấm điểm toàn bộ bằng Reranker
                 pairs = [[queries[0], doc.page_content] for doc in raw_candidates]
-                scores = reranker.predict(pairs)
+                scores = reranker.predict(pairs, batch_size=reranker_batch_size)
                 
                 # Sắp xếp lại và lấy TOP_K
                 scored_docs = list(zip(raw_candidates, scores))
