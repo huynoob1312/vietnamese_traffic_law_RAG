@@ -49,9 +49,9 @@ def main():
                 retrieved_docs = retriever.retrieve_multi(queries)
                 break # Nếu thành công thì thoát vòng lặp retry
             except Exception as e:
-                error_msg = str(e)
-                if '429' in error_msg or 'Quota' in error_msg or 'exhausted' in error_msg.lower():
-                    print(f"\n[CẢNH BÁO] Quá giới hạn API (Lần {attempt+1}/{max_retries}). Chờ 30 giây rồi thử lại...")
+                error_msg = str(e).lower()
+                if '429' in error_msg or 'quota' in error_msg or 'exhausted' in error_msg or '503' in error_msg or 'unavailable' in error_msg:
+                    print(f"\n[CẢNH BÁO] Kẹt API hoặc Mạng (Lần {attempt+1}/{max_retries}). Chờ 30 giây rồi thử lại...")
                     time.sleep(30)
                 else:
                     print(f"\n[LỖI LẠ] Bỏ qua câu này do lỗi: {error_msg}")
