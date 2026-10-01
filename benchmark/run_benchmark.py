@@ -65,9 +65,10 @@ def main():
             print("\n[THẤT BẠI] Đã thử 5 lần nhưng vẫn kẹt API, bỏ qua câu này.")
             retrieved_docs = []
         
-        # Tạo định danh (ID) chuẩn
+        # Tạo định danh (ID) chuẩn, đồng bộ dấu gạch chéo (Slash) giữa Windows và Linux
+        ground_truth_source = ground_truth_source.replace('\\', '/')
         ground_truth_id = f"{ground_truth_source}_{ground_truth_dieu}"
-        retrieved_ids = [f"{d.metadata.get('source', '')}_{str(d.metadata.get('dieu', ''))}" for d in retrieved_docs]
+        retrieved_ids = [f"{d.metadata.get('source', '').replace('\\', '/')}_{str(d.metadata.get('dieu', ''))}" for d in retrieved_docs]
             
         retrieval_results.append({
             "retrieved": retrieved_ids,
