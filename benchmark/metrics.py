@@ -58,9 +58,6 @@ def map_at_k(retrieved_ids: List[str], ground_truth_ids: List[str], k: int) -> f
     return sum_precisions / len(ground_truth_set)
 
 
-# ==========================================
-# HÀM TỔNG HỢP (EVALUATOR) CHO NHIỀU TRUY VẤN
-# ==========================================
 def evaluate_retrieval_metrics(results: List[dict]):
     """
     Hàm tính toán tổng hợp toàn bộ các metrics cho một tập dữ liệu.

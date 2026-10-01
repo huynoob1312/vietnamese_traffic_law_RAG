@@ -61,4 +61,4 @@ def filter_dataset(input_file, output_file):
     print(f"File đã lọc được lưu tại: {output_file}")
 
 if __name__ == "__main__":
-    filter_dataset("eval_dataset.jsonl", "eval_dataset_filtered.jsonl")
+    filter_dataset("benchmark/eval_dataset.jsonl", "benchmark/eval_dataset.jsonl")
