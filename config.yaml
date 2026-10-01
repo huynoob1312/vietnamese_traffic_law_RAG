@@ -27,3 +27,6 @@ retrieval:
 llm_params:
   provider: "gemini" # "gemini" or "ollama"
   model: "gemini-3.6-flash" # "gemini-3.6-flash" or "qwen2.5:3b"
+
+benchmark:
+  dataset_size: "sample" # "sample" (200 câu) hoặc "full" (1500 câu)

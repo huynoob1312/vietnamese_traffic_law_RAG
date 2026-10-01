@@ -29,3 +29,5 @@ USE_MULTI_QUERY = config.get("retrieval", {}).get("use_multi_query", False)
 RERANKER_MODEL = config.get("retrieval", {}).get("reranker_model", "BAAI/bge-reranker-base")
 TOP_K_RAW = config.get("retrieval", {}).get("top_k_raw", 20)
 SEARCH_TYPE = config.get("retrieval", {}).get("search_type", "hybrid")
+
+BENCHMARK_DATASET_SIZE = config.get("benchmark", {}).get("dataset_size", "sample")

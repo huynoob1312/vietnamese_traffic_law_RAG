@@ -11,13 +11,17 @@ sys.path.append(os.path.abspath('.'))
 from src.vectordb.qdrant_client import get_qdrant_client
 from src.retrieval.rag_chain import get_ensemble_retriever, generate_multi_queries
 from src.llm.local_llm import get_llm
-from src.utils.config import USE_MULTI_QUERY
+from src.utils.config import USE_MULTI_QUERY, BENCHMARK_DATASET_SIZE
 from benchmark.metrics import evaluate_retrieval_metrics
 
 def main():
     load_dotenv()
     
-    dataset_path = 'benchmark/eval_dataset_sample_200.jsonl'
+    if BENCHMARK_DATASET_SIZE == "full":
+        dataset_path = 'benchmark/eval_dataset_filtered.jsonl'
+    else:
+        dataset_path = 'benchmark/eval_dataset_sample_200.jsonl'
+        
     if not os.path.exists(dataset_path):
         dataset_path = 'benchmark/eval_dataset.jsonl'
         
