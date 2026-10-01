@@ -9,7 +9,6 @@ models:
   # embedding: "BAAI/bge-m3"
   # embedding: "keepitreal/vietnamese-sbert"
   # embedding: "bkai-foundation-models/vietnamese-bi-encoder"
-  llm: "qwen2.5:3b"
 chunking:
   thresh_dieu: 600
   thresh_khoan_default: 500
@@ -20,7 +19,7 @@ retrieval:
   search_type: "hybrid" # "hybrid", "bm25", "vector"
   top_k: 10
   use_reranker: false
-  use_multi_query: true
+  use_multi_query: false
   reranker_model: "BAAI/bge-reranker-v2-m3"
   top_k_raw: 30
 

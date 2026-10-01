@@ -13,8 +13,8 @@ with open(config_path, "r", encoding="utf-8") as file:
 
 QDRANT_COLLECTION = config["qdrant"]["collection_name"]
 EMBEDDING_MODEL = config["models"]["embedding"]
-LLM_PROVIDER = config.get("llm_params", {}).get("provider", "ollama")
-LLM_MODEL = config.get("llm_params", {}).get("model", config["models"]["llm"])
+LLM_PROVIDER = config.get("llm_params", {}).get("provider", "gemini")
+LLM_MODEL = config.get("llm_params", {}).get("model", "gemini-3.6-flash")
 LLM_TEMPERATURE = config.get("llm_params", {}).get("temperature", 0.1)
 
 # Hyperparameters
