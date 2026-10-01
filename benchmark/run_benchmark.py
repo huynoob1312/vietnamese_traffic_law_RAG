@@ -72,7 +72,16 @@ def main():
         # Tạo định danh (ID) chuẩn, đồng bộ dấu gạch chéo (Slash) giữa Windows và Linux
         ground_truth_source = ground_truth_source.replace('\\', '/')
         ground_truth_id = f"{ground_truth_source}_{ground_truth_dieu}"
-        retrieved_ids = [f"{d.metadata.get('source', '').replace('\\', '/')}_{str(d.metadata.get('dieu', ''))}" for d in retrieved_docs]
+        
+        raw_retrieved_ids = [f"{d.metadata.get('source', '').replace('\\', '/')}_{str(d.metadata.get('dieu', ''))}" for d in retrieved_docs]
+        
+        # Loại bỏ các ID trùng lặp (vì nhiều chunk có thể thuộc cùng 1 Điều) nhưng vẫn giữ đúng thứ tự
+        seen_ids = set()
+        retrieved_ids = []
+        for rid in raw_retrieved_ids:
+            if rid not in seen_ids:
+                retrieved_ids.append(rid)
+                seen_ids.add(rid)
             
         retrieval_results.append({
             "retrieved": retrieved_ids,
