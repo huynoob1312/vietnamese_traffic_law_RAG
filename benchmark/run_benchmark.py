@@ -42,8 +42,6 @@ def main():
     
     for item in tqdm(dataset, desc="Evaluating"):
         question = item['question']
-        ground_truth_source = item.get('chunk_source', '')
-        ground_truth_dieu = str(item.get('chunk_dieu', ''))
         
         # Xử lý Retry khi dính lỗi từ LLM
         max_retries = 5
@@ -69,9 +67,20 @@ def main():
             print("\n[THẤT BẠI] Đã thử 5 lần nhưng vẫn kẹt API, bỏ qua câu này.")
             retrieved_docs = []
         
-        # Tạo định danh (ID) chuẩn, đồng bộ dấu gạch chéo (Slash) giữa Windows và Linux
-        ground_truth_source = ground_truth_source.replace('\\', '/')
-        ground_truth_id = f"{ground_truth_source}_{ground_truth_dieu}"
+        # Xử lý Ground Truth (Hỗ trợ cả trường hợp 1 đáp án hoặc nhiều đáp án dạng List)
+        raw_sources = item.get('chunk_source', '')
+        raw_dieus = item.get('chunk_dieu', '')
+        
+        if not isinstance(raw_sources, list):
+            raw_sources = [raw_sources]
+        if not isinstance(raw_dieus, list):
+            raw_dieus = [raw_dieus]
+            
+        # Đảm bảo 2 mảng bằng nhau
+        ground_truth_ids = []
+        for src, dieu in zip(raw_sources, raw_dieus):
+            src_normalized = str(src).replace('\\', '/')
+            ground_truth_ids.append(f"{src_normalized}_{str(dieu)}")
         
         raw_retrieved_ids = [f"{d.metadata.get('source', '').replace('\\', '/')}_{str(d.metadata.get('dieu', ''))}" for d in retrieved_docs]
         
@@ -85,7 +94,7 @@ def main():
             
         retrieval_results.append({
             "retrieved": retrieved_ids,
-            "ground_truths": [ground_truth_id]
+            "ground_truths": ground_truth_ids
         })
 
     print("\n" + "="*50)
