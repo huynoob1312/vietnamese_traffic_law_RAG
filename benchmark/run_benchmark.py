@@ -40,9 +40,26 @@ def main():
         ground_truth_source = item.get('chunk_source', '')
         ground_truth_dieu = str(item.get('chunk_dieu', ''))
         
-        # Sinh multi-query và truy xuất (Chấp nhận chậm để kết quả chính xác)
-        queries = generate_multi_queries(question, llm)
-        retrieved_docs = retriever.retrieve_multi(queries)
+        # Xử lý Retry khi dính lỗi 429 Too Many Requests từ Gemini
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                # Sinh multi-query và truy xuất
+                queries = generate_multi_queries(question, llm)
+                retrieved_docs = retriever.retrieve_multi(queries)
+                break # Nếu thành công thì thoát vòng lặp retry
+            except Exception as e:
+                error_msg = str(e)
+                if '429' in error_msg or 'Quota' in error_msg or 'exhausted' in error_msg.lower():
+                    print(f"\n[CẢNH BÁO] Quá giới hạn API (Lần {attempt+1}/{max_retries}). Chờ 30 giây rồi thử lại...")
+                    time.sleep(30)
+                else:
+                    print(f"\n[LỖI LẠ] Bỏ qua câu này do lỗi: {error_msg}")
+                    retrieved_docs = []
+                    break
+        else:
+            print("\n[THẤT BẠI] Đã thử 5 lần nhưng vẫn kẹt API, bỏ qua câu này.")
+            retrieved_docs = []
         
         # Tạo định danh (ID) chuẩn
         ground_truth_id = f"{ground_truth_source}_{ground_truth_dieu}"
@@ -61,8 +78,6 @@ def main():
     
     for metric, score in final_scores.items():
         print(f"{metric}: {score}")
-        
-    print("="*50)
 
 if __name__ == "__main__":
     main()
