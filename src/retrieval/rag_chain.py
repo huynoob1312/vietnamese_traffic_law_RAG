@@ -9,6 +9,7 @@ from src.utils.config import TOP_K, USE_RERANKER, RERANKER_MODEL, TOP_K_RAW, LLM
 from pyvi import ViTokenizer
 from sentence_transformers import CrossEncoder
 from langchain_community.retrievers import BM25Retriever
+import torch
 
 import os
 import pickle
@@ -67,7 +68,6 @@ def get_ensemble_retriever(qdrant):
     reranker = None
     reranker_batch_size = 32
     if USE_RERANKER:
-        import torch
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         reranker = CrossEncoder(RERANKER_MODEL, device=device)
         reranker_batch_size = 128 if device == 'cuda' else 32

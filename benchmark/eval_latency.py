@@ -20,7 +20,7 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 def evaluate_latency(experiment_name: str, retriever, llm, prompt, dataset: list) -> dict:
-    print(f"\n{'='*60}\n🚀 RUNNING LATENCY EVAL: {experiment_name}\n{'='*60}")
+    print(f"\n{'='*60}\n RUNNING LATENCY EVAL: {experiment_name}\n{'='*60}")
     
     answer_chain = prompt | llm | StrOutputParser()
     
