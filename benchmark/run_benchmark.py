@@ -52,10 +52,10 @@ def main():
                 if USE_MULTI_QUERY:
                     queries = generate_multi_queries(question, llm)
                 else:
-                    queries = [question] # Dùng mỗi câu hỏi gốc, bỏ qua LLM
+                    queries = [question]
                 
                 retrieved_docs = retriever.retrieve_multi(queries)
-                break # Nếu thành công thì thoát vòng lặp retry
+                break
             except Exception as e:
                 error_msg = str(e).lower()
                 if '429' in error_msg or 'quota' in error_msg or 'exhausted' in error_msg or '503' in error_msg or 'unavailable' in error_msg:
