@@ -16,7 +16,7 @@ from benchmark.metrics import evaluate_retrieval_metrics
 def main():
     load_dotenv()
     
-    dataset_path = 'benchmark/eval_dataset_test.jsonl'
+    dataset_path = 'benchmark/eval_dataset_sample_200.jsonl'
     if not os.path.exists(dataset_path):
         dataset_path = 'benchmark/eval_dataset.jsonl'
         
