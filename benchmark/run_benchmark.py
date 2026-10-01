@@ -16,7 +16,6 @@ from benchmark.metrics import evaluate_retrieval_metrics
 def main():
     load_dotenv()
     
-    # 1. Đọc Dataset (Chỉ lấy câu hỏi chuẩn, bỏ bẫy)
     dataset_path = 'benchmark/eval_dataset_test.jsonl'
     if not os.path.exists(dataset_path):
         dataset_path = 'benchmark/eval_dataset.jsonl'
@@ -28,17 +27,14 @@ def main():
                 item = json.loads(line)
                 if not item.get('is_trap', False):
                     dataset.append(item)
-    print(f"📚 Đã tải {len(dataset)} câu hỏi In-domain từ {dataset_path}")
-    
     qdrant = get_qdrant_client()
     retriever = get_ensemble_retriever(qdrant)
     llm = get_llm()
 
     retrieval_results = []
 
-    print(f"⏳ BẮT ĐẦU CHẠY BENCHMARK TRÊN {len(dataset)} CÂU HỎI...")
+    print(f"BẮT ĐẦU CHẠY BENCHMARK TRÊN {len(dataset)} CÂU HỎI...")
     
-    # 3. Chạy đánh giá
     for item in tqdm(dataset, desc="Evaluating"):
         question = item['question']
         ground_truth_source = item.get('chunk_source', '')
@@ -57,15 +53,14 @@ def main():
             "ground_truths": [ground_truth_id]
         })
 
-    # 4. TỔNG HỢP VÀ IN BÁO CÁO
     print("\n" + "="*50)
-    print("🏆 KẾT QUẢ BENCHMARK (CẤU HÌNH HIỆN TẠI TỪ CONFIG.YAML)")
+    print("KẾT QUẢ BENCHMARK (CẤU HÌNH HIỆN TẠI TỪ CONFIG.YAML)")
     print("="*50)
     
     final_scores = evaluate_retrieval_metrics(retrieval_results)
     
     for metric, score in final_scores.items():
-        print(f"🔸 {metric}: {score}")
+        print(f"{metric}: {score}")
         
     print("="*50)
 
