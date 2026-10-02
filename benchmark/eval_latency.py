@@ -32,25 +32,43 @@ def evaluate_latency(experiment_name: str, retriever, llm, prompt, dataset: list
         question = item['question']
         is_trap = item.get('is_trap', False)
         
-        t0 = time.time()
-        
         # 1. Đo Retrieval
-        if USE_MULTI_QUERY:
-            queries = generate_multi_queries(question, llm)
-        else:
-            queries = [question]
-            
-        retrieved_docs = retriever.retrieve_multi(queries)
-        t1 = time.time()
+        for attempt in range(5):
+            try:
+                t0 = time.time()
+                if USE_MULTI_QUERY:
+                    queries = generate_multi_queries(question, llm)
+                else:
+                    queries = [question]
+                    
+                retrieved_docs = retriever.retrieve_multi(queries)
+                t1 = time.time()
+                break
+            except Exception as e:
+                if '429' in str(e).lower() or 'quota' in str(e).lower():
+                    print(f"\n[CẢNH BÁO] API Rate Limit khi Retrieval. Chờ 30s...")
+                    time.sleep(30)
+                else:
+                    raise e
         
         # 2. Đo Generation
         context = format_docs(retrieved_docs)
-        answer = answer_chain.invoke({'context': context, 'input': question})
-        t2 = time.time()
+        for attempt in range(5):
+            try:
+                t_gen_start = time.time()
+                answer = answer_chain.invoke({'context': context, 'input': question})
+                t2 = time.time()
+                break
+            except Exception as e:
+                if '429' in str(e).lower() or 'quota' in str(e).lower():
+                    print(f"\n[CẢNH BÁO] API Rate Limit khi Generation. Chờ 30s...")
+                    time.sleep(30)
+                else:
+                    raise e
         
         retrieval_times.append(t1 - t0)
-        generation_times.append(t2 - t1)
-        total_times.append(t2 - t0)
+        generation_times.append(t2 - t_gen_start)
+        total_times.append((t1 - t0) + (t2 - t_gen_start))
                 
     # Trả về kết quả
     res = {
