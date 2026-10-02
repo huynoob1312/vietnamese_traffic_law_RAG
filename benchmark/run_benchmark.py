@@ -62,7 +62,6 @@ def main():
             except concurrent.futures.TimeoutError:
                 print(f"\n[CẢNH BÁO] Treo quá 120s ở câu này (Lần {attempt+1}/{max_retries}). Máy chủ Ollama có thể đã chết lâm sàng do tràn RAM!")
                 print("[HỆ THỐNG] Đang sốc điện khởi động lại Ollama Server...")
-                import os
                 os.system("pkill -9 ollama")
                 time.sleep(2)
                 os.system("nohup ollama serve > /dev/null 2>&1 &")
