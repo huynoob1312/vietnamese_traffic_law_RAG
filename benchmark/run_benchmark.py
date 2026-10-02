@@ -13,6 +13,7 @@ from src.retrieval.rag_chain import get_ensemble_retriever, generate_multi_queri
 from src.llm.local_llm import get_llm
 from src.utils.config import USE_MULTI_QUERY, BENCHMARK_DATASET_SIZE
 from benchmark.metrics import evaluate_retrieval_metrics
+import concurrent.futures
 
 def main():
     load_dotenv()
@@ -47,12 +48,19 @@ def main():
         max_retries = 5
         for attempt in range(max_retries):
             try:
-                if USE_MULTI_QUERY:
-                    queries = generate_multi_queries(question, llm)
-                else:
-                    queries = [question]
-                
-                retrieved_docs = retriever.retrieve_multi(queries)
+                # Ép thời gian chạy tối đa là 60 giây/câu để chống kẹt
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    if USE_MULTI_QUERY:
+                        future = executor.submit(generate_multi_queries, question, llm)
+                        queries = future.result(timeout=60)
+                    else:
+                        queries = [question]
+                    
+                    retrieved_docs = retriever.retrieve_multi(queries)
+                break
+            except concurrent.futures.TimeoutError:
+                print(f"\n[CẢNH BÁO] Treo quá 60s ở câu này! Đang hủy tiến trình (Lần {attempt+1}/{max_retries})...")
+                retrieved_docs = []
                 break
             except Exception as e:
                 error_msg = str(e).lower()
