@@ -38,11 +38,19 @@ def main():
     retriever = get_ensemble_retriever(qdrant)
     llm = get_llm()
 
+    checkpoint_file = 'benchmark/benchmark_checkpoint.json'
     retrieval_results = []
+    processed_count = 0
+    
+    if os.path.exists(checkpoint_file):
+        with open(checkpoint_file, 'r', encoding='utf-8') as f:
+            retrieval_results = json.load(f)
+        processed_count = len(retrieval_results)
+        print(f"\n[HỆ THỐNG] Đã tìm thấy Checkpoint! Khôi phục thành công {processed_count} câu đã chạy.")
 
     print(f"BẮT ĐẦU CHẠY BENCHMARK TRÊN {len(dataset)} CÂU HỎI...")
     
-    for item in tqdm(dataset, desc="Evaluating"):
+    for item in tqdm(dataset[processed_count:], initial=processed_count, total=len(dataset), desc="Evaluating"):
         question = item['question']
         
         # Xử lý Retry khi dính lỗi từ LLM
@@ -121,6 +129,10 @@ def main():
             "retrieved": retrieved_ids,
             "ground_truths": ground_truth_ids
         })
+        
+        # Lưu Checkpoint (Save Game) sau mỗi câu
+        with open(checkpoint_file, 'w', encoding='utf-8') as f:
+            json.dump(retrieval_results, f, ensure_ascii=False, indent=2)
 
     print("\n" + "="*50)
     print("KẾT QUẢ BENCHMARK (CẤU HÌNH HIỆN TẠI TỪ CONFIG.YAML)")
