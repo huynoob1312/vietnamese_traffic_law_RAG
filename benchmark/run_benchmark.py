@@ -65,6 +65,12 @@ def main():
                 time.sleep(2)
                 os.system("nohup ollama serve > /dev/null 2>&1 &")
                 time.sleep(5)
+                
+                if attempt >= 1:
+                    print("Skip")
+                    retrieved_docs = []
+                    break
+                
                 continue
             except Exception as e:
                 error_msg = str(e).lower()
