@@ -48,11 +48,10 @@ def main():
         max_retries = 5
         for attempt in range(max_retries):
             try:
-                # Ép thời gian chạy tối đa là 120 giây/câu để chống kẹt
                 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
                 if USE_MULTI_QUERY:
                     future = executor.submit(generate_multi_queries, question, llm)
-                    queries = future.result(timeout=120)
+                    queries = future.result(timeout=240)
                 else:
                     queries = [question]
                 
@@ -60,8 +59,8 @@ def main():
                 executor.shutdown(wait=False)
                 break
             except concurrent.futures.TimeoutError:
-                print(f"\n[CẢNH BÁO] Treo quá 120s ở câu này (Lần {attempt+1}/{max_retries}). Máy chủ Ollama có thể đã chết lâm sàng do tràn RAM!")
-                print("[HỆ THỐNG] Đang sốc điện khởi động lại Ollama Server...")
+                print(f"\n[CẢNH BÁO] Treo quá 240s ở câu này (Lần {attempt+1}/{max_retries}). Máy chủ Ollama có thể đã chết lâm sàng do tràn RAM!")
+                
                 os.system("pkill -9 ollama")
                 time.sleep(2)
                 os.system("nohup ollama serve > /dev/null 2>&1 &")
