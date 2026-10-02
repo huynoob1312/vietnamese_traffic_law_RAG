@@ -70,7 +70,8 @@ def get_ensemble_retriever(qdrant):
     if USE_RERANKER:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         reranker = CrossEncoder(RERANKER_MODEL, device=device)
-        reranker_batch_size = 128 if device == 'cuda' else 32
+        # Bóp nhỏ Batch Size xuống 8 để tránh tạo ra cục rác VRAM 864MB gây tràn bộ nhớ
+        reranker_batch_size = 8 if device == 'cuda' else 8
 
     # 3. Custom Retriever (RRF/Reranker + Sibling Enrichment)
     class CustomEnsembleRetriever:
