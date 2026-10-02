@@ -36,12 +36,19 @@ def register(request: UserRegisterRequest, db: Session = Depends(get_db)):
         "role": new_user.role
     })
     
+    user_response = UserResponse(
+        user_id=new_user.user_id,
+        username=new_user.username,
+        role=new_user.role,
+        created_at=new_user.created_at
+    )
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
         user_id=new_user.user_id,
         username=new_user.username,
-        role=new_user.role
+        role=new_user.role,
+        user=user_response
     )
 
 
@@ -62,12 +69,19 @@ def login(request: UserLoginRequest, db: Session = Depends(get_db)):
         "role": user.role
     })
     
+    user_response = UserResponse(
+        user_id=user.user_id,
+        username=user.username,
+        role=user.role,
+        created_at=user.created_at
+    )
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
         user_id=user.user_id,
         username=user.username,
-        role=user.role
+        role=user.role,
+        user=user_response
     )
 
 

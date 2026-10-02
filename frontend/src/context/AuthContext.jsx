@@ -4,7 +4,14 @@ import { authAPI } from '../services/api';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('traffic_law_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
   const [token, setToken] = useState(() => localStorage.getItem('traffic_law_token'));
   const [loading, setLoading] = useState(true);
 
@@ -16,6 +23,7 @@ export function AuthProvider({ children }) {
         try {
           const userData = await authAPI.getMe();
           setUser(userData);
+          localStorage.setItem('traffic_law_user', JSON.stringify(userData));
           setToken(savedToken);
         } catch {
           // Token is invalid or expired
@@ -24,6 +32,9 @@ export function AuthProvider({ children }) {
           setUser(null);
           setToken(null);
         }
+      } else {
+        localStorage.removeItem('traffic_law_user');
+        setUser(null);
       }
       setLoading(false);
     }
@@ -32,6 +43,8 @@ export function AuthProvider({ children }) {
 
     // Listen for unauthorized events triggered by API interceptor
     const handleUnauthorized = () => {
+      localStorage.removeItem('traffic_law_token');
+      localStorage.removeItem('traffic_law_user');
       setUser(null);
       setToken(null);
     };
@@ -42,18 +55,30 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     const data = await authAPI.login(username, password);
+    const userInfo = data.user || {
+      user_id: data.user_id,
+      username: data.username,
+      role: data.role,
+    };
     localStorage.setItem('traffic_law_token', data.access_token);
+    localStorage.setItem('traffic_law_user', JSON.stringify(userInfo));
     setToken(data.access_token);
-    setUser(data.user);
-    return data.user;
+    setUser(userInfo);
+    return userInfo;
   };
 
   const register = async (username, password) => {
     const data = await authAPI.register(username, password);
+    const userInfo = data.user || {
+      user_id: data.user_id,
+      username: data.username,
+      role: data.role,
+    };
     localStorage.setItem('traffic_law_token', data.access_token);
+    localStorage.setItem('traffic_law_user', JSON.stringify(userInfo));
     setToken(data.access_token);
-    setUser(data.user);
-    return data.user;
+    setUser(userInfo);
+    return userInfo;
   };
 
   const logout = async () => {

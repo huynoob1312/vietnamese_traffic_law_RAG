@@ -7,6 +7,7 @@ from src.api.dependencies import rag_components
 from src.api.routers import router as api_router
 from src.api.auth_router import router as auth_router
 from src.api.history_router import router as history_router
+from src.api.admin_router import router as admin_router
 from src.db.init_db import init_tables
 
 import os
@@ -72,6 +73,7 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(history_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
 
 # Mount React frontend static assets if built
 DIST_DIR = os.path.join(os.path.dirname(__file__), "frontend", "dist")

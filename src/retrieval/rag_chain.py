@@ -5,7 +5,7 @@ from src.ingestion.docx_loader import load_and_chunk_data
 from src.llm.local_llm import get_llm
 from src.vectordb.qdrant_client import get_qdrant_client
 from src.prompt.legal_prompt import get_legal_prompt
-from src.utils.config import TOP_K, USE_RERANKER, RERANKER_MODEL, TOP_K_RAW, LLM_PROVIDER, SEARCH_TYPE
+import src.utils.config as cfg
 from pyvi import ViTokenizer
 from sentence_transformers import CrossEncoder
 from langchain_community.retrievers import BM25Retriever
@@ -36,7 +36,7 @@ def get_ensemble_retriever(qdrant):
     # init Qdrant Retriever
     qdrant_retriever = qdrant.as_retriever(
         search_type="mmr", 
-        search_kwargs={"k": TOP_K_RAW}
+        search_kwargs={"k": cfg.TOP_K_RAW}
     )
     
     # BM25 Retriever (Keyword Search)
@@ -62,11 +62,11 @@ def get_ensemble_retriever(qdrant):
         return ViTokenizer.tokenize(text).split()
         
     bm25_retriever = BM25Retriever.from_documents(chunks, preprocess_func=pyvi_tokenize)
-    bm25_retriever.k = TOP_K_RAW
+    bm25_retriever.k = cfg.TOP_K_RAW
 
     reranker = None
-    if USE_RERANKER:
-        reranker = CrossEncoder(RERANKER_MODEL)
+    if cfg.USE_RERANKER:
+        reranker = CrossEncoder(cfg.RERANKER_MODEL)
 
     # 3. Custom Retriever (RRF/Reranker + Sibling Enrichment)
     class CustomEnsembleRetriever:
@@ -74,13 +74,13 @@ def get_ensemble_retriever(qdrant):
             all_lists = []
             
             with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-                bm25_futures = [executor.submit(bm25_retriever.invoke, q) for q in queries] if SEARCH_TYPE in ["hybrid", "bm25"] else []
-                qdrant_futures = [executor.submit(qdrant_retriever.invoke, q) for q in queries] if SEARCH_TYPE in ["hybrid", "vector"] else []
+                bm25_futures = [executor.submit(bm25_retriever.invoke, q) for q in queries] if cfg.SEARCH_TYPE in ["hybrid", "bm25"] else []
+                qdrant_futures = [executor.submit(qdrant_retriever.invoke, q) for q in queries] if cfg.SEARCH_TYPE in ["hybrid", "vector"] else []
                 
                 for f in bm25_futures + qdrant_futures:
                     all_lists.append(f.result())
                     
-            if USE_RERANKER and reranker is not None:
+            if cfg.USE_RERANKER and reranker is not None:
                 raw_candidates = []
                 seen = set()
                 for lst in all_lists:
@@ -96,10 +96,10 @@ def get_ensemble_retriever(qdrant):
                 # Sắp xếp lại và lấy TOP_K
                 scored_docs = list(zip(raw_candidates, scores))
                 scored_docs.sort(key=lambda x: x[1], reverse=True)
-                fused_docs = [doc for doc, score in scored_docs][:TOP_K]
+                fused_docs = [doc for doc, score in scored_docs][:cfg.TOP_K]
             else:
                 # RRF toàn cục (Global RRF) nếu KHÔNG dùng Reranker
-                fused_docs = reciprocal_rank_fusion(all_lists)[:TOP_K]
+                fused_docs = reciprocal_rank_fusion(all_lists)[:cfg.TOP_K]
              
             enriched_docs = []
             seen_contents = set()
@@ -132,7 +132,7 @@ def get_ensemble_retriever(qdrant):
     return CustomEnsembleRetriever()
 
 def generate_multi_queries(query: str, llm) -> list[str]:
-    if LLM_PROVIDER.lower() == "gemini":
+    if cfg.LLM_PROVIDER.lower() == "gemini":
         template = """Bạn là một chuyên gia pháp lý tại Việt Nam.
 Nhiệm vụ của bạn là tạo ra 3 câu truy vấn để tối ưu hóa việc tìm kiếm trong cơ sở dữ liệu luật.
 QUY TẮC:
@@ -171,7 +171,7 @@ def build_rag_chain():
     retriever = get_ensemble_retriever(qdrant)
     
     llm = get_llm()
-    prompt = get_legal_prompt(LLM_PROVIDER)
+    prompt = get_legal_prompt(cfg.LLM_PROVIDER)
     
     def process_and_retrieve(inputs):
         original_query = inputs["input"]

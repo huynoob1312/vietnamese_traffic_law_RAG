@@ -77,4 +77,55 @@ export const historyAPI = {
   },
 };
 
+export const adminAPI = {
+  getConfig: async () => {
+    const response = await api.get('/admin/config');
+    return response.data;
+  },
+  updateConfig: async (configData) => {
+    const response = await api.put('/admin/config', configData);
+    return response.data;
+  },
+  getDocuments: async () => {
+    const response = await api.get('/admin/documents');
+    return response.data;
+  },
+  uploadDocument: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/admin/documents/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  deleteDocument: async (filename) => {
+    const response = await api.delete(`/admin/documents/${encodeURIComponent(filename)}`);
+    return response.data;
+  },
+  triggerIngest: async () => {
+    const response = await api.post('/admin/ingest');
+    return response.data;
+  },
+  getIngestStatus: async () => {
+    const response = await api.get('/admin/ingest/status');
+    return response.data;
+  },
+  getUsers: async () => {
+    const response = await api.get('/admin/users');
+    return response.data;
+  },
+  updateUserRole: async (userId, role) => {
+    const response = await api.patch(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  },
+  getStats: async () => {
+    const response = await api.get('/admin/stats');
+    return response.data;
+  },
+  getLowConfidenceQueries: async () => {
+    const response = await api.get('/admin/audit/low-confidence');
+    return response.data;
+  },
+};
+
 export default api;

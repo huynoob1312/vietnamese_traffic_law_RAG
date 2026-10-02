@@ -1,9 +1,9 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../context/ChatContext';
-import { Plus, MessageSquare, Trash2, LogOut, LogIn, Scale } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, LogOut, LogIn, Scale, Shield } from 'lucide-react';
 
-export default function Sidebar({ onOpenAuth }) {
+export default function Sidebar({ onOpenAuth, onOpenAdmin }) {
   const { user, isAuthenticated, logout } = useAuth();
   const { sessions, activeSessionId, selectSession, createNewChat, deleteSession } = useChat();
 
@@ -98,6 +98,17 @@ export default function Sidebar({ onOpenAuth }) {
 
       {/* Bottom Section: User Profile or Sign In */}
       <div className="pt-3 border-t border-pebble mt-2">
+        {isAuthenticated && user?.role === 'admin' && (
+          <button
+            onClick={onOpenAdmin}
+            className="w-full h-8 mb-2 px-3 rounded-pill bg-deep-teal/10 hover:bg-deep-teal/20 border border-deep-teal/30 flex items-center justify-center gap-1.5 text-xs font-medium text-deep-teal transition-all active:scale-[0.99] shadow-subtle"
+            title="Mở Bảng Quản trị Hệ thống"
+          >
+            <Shield size={13} className="text-deep-teal shrink-0" />
+            <span>Quản trị hệ thống</span>
+          </button>
+        )}
+
         {isAuthenticated && user ? (
           <div className="flex items-center justify-between p-1.5 rounded-pill bg-white border border-pebble">
             <div className="flex items-center gap-2 min-w-0">

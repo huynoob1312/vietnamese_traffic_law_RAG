@@ -1,28 +1,20 @@
 qdrant:
-  # collection_name: "legal_docs"
-  # collection_name: "legal_docs_bge"
-  # collection_name: "legal_docs_sbert" 
-  collection_name: "legal_docs_vietnamese_bi_encoder" 
-
+  collection_name: legal_docs_vietnamese_bi_encoder
 models:
-  # embedding: "intfloat/multilingual-e5-small"
-  # embedding: "BAAI/bge-m3"
-  # embedding: "keepitreal/vietnamese-sbert"
-  embedding: "bkai-foundation-models/vietnamese-bi-encoder"
-  llm: "qwen2.5:3b"
+  embedding: bkai-foundation-models/vietnamese-bi-encoder
+  llm: qwen2.5:3b
 chunking:
   thresh_dieu: 600
   thresh_khoan_default: 500
   min_chunk: 30
   min_chunk_diem: 5
-
 retrieval:
-  search_type: "hybrid" # "hybrid", "bm25", "vector"
-  top_k: 10
+  search_type: bm25
+  top_k: 7
   use_reranker: false
-  reranker_model: "BAAI/bge-reranker-v2-m3"
-  top_k_raw: 30
-
+  reranker_model: BAAI/bge-reranker-v2-m3
+  top_k_raw: 25
 llm_params:
-  provider: "gemini" # "gemini" or "ollama"
-  model: "gemini-3.6-flash" # "gemini-3.6-flash" or "qwen2.5:3b"
+  provider: gemini
+  model: gemini-3.6-flash
+  temperature: 0.1
