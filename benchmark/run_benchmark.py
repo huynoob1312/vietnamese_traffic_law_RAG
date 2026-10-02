@@ -60,9 +60,14 @@ def main():
                 executor.shutdown(wait=False)
                 break
             except concurrent.futures.TimeoutError:
-                print(f"\n[CẢNH BÁO] Treo quá 120s ở câu này! Đang hủy tiến trình (Lần {attempt+1}/{max_retries})...")
-                retrieved_docs = []
-                break
+                print(f"\n[CẢNH BÁO] Treo quá 120s ở câu này (Lần {attempt+1}/{max_retries}). Máy chủ Ollama có thể đã chết lâm sàng do tràn RAM!")
+                print("[HỆ THỐNG] Đang sốc điện khởi động lại Ollama Server...")
+                import os
+                os.system("pkill -9 ollama")
+                time.sleep(2)
+                os.system("nohup ollama serve > /dev/null 2>&1 &")
+                time.sleep(5)
+                continue
             except Exception as e:
                 error_msg = str(e).lower()
                 if '429' in error_msg or 'quota' in error_msg or 'exhausted' in error_msg or '503' in error_msg or 'unavailable' in error_msg:
