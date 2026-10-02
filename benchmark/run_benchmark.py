@@ -3,6 +3,7 @@ import sys
 import json
 import time
 import numpy as np
+import torch
 from tqdm import tqdm
 from dotenv import load_dotenv
 
@@ -62,6 +63,12 @@ def main():
                 print(f"\n[CẢNH BÁO] Treo quá 240s ở câu này (Lần {attempt+1}/{max_retries}). Máy chủ Ollama có thể đã chết lâm sàng do tràn RAM!")
                 
                 os.system("pkill -9 ollama")
+                
+                try:
+                    torch.cuda.empty_cache()
+                except Exception:
+                    pass
+                    
                 time.sleep(10)
                 os.system("nohup ollama serve > /dev/null 2>&1 &")
                 time.sleep(10)
