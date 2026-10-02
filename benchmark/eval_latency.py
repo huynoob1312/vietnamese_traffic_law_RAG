@@ -96,7 +96,6 @@ def main():
     
     all_results = []
     
-    # Bạn có thể gọi evaluate_latency nhiều lần với các llm, prompt khác nhau ở đây
     res_1 = evaluate_latency(
         experiment_name="Cấu hình hiện tại (từ config.yaml)", 
         retriever=retriever, 
