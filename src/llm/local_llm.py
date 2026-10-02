@@ -19,6 +19,7 @@ def get_llm():
         return OllamaLLM(
             model=LLM_MODEL, 
             temperature=LLM_TEMPERATURE,
+            num_ctx=2048,
             num_predict=300,
             timeout=300.0
         )
