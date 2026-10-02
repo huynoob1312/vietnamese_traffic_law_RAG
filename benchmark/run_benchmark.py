@@ -48,18 +48,19 @@ def main():
         max_retries = 5
         for attempt in range(max_retries):
             try:
-                # Ép thời gian chạy tối đa là 60 giây/câu để chống kẹt
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    if USE_MULTI_QUERY:
-                        future = executor.submit(generate_multi_queries, question, llm)
-                        queries = future.result(timeout=60)
-                    else:
-                        queries = [question]
-                    
-                    retrieved_docs = retriever.retrieve_multi(queries)
+                # Ép thời gian chạy tối đa là 120 giây/câu để chống kẹt
+                executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+                if USE_MULTI_QUERY:
+                    future = executor.submit(generate_multi_queries, question, llm)
+                    queries = future.result(timeout=120)
+                else:
+                    queries = [question]
+                
+                retrieved_docs = retriever.retrieve_multi(queries)
+                executor.shutdown(wait=False)
                 break
             except concurrent.futures.TimeoutError:
-                print(f"\n[CẢNH BÁO] Treo quá 60s ở câu này! Đang hủy tiến trình (Lần {attempt+1}/{max_retries})...")
+                print(f"\n[CẢNH BÁO] Treo quá 120s ở câu này! Đang hủy tiến trình (Lần {attempt+1}/{max_retries})...")
                 retrieved_docs = []
                 break
             except Exception as e:
