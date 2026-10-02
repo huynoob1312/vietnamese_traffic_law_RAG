@@ -14,7 +14,7 @@ from src.retrieval.rag_chain import get_ensemble_retriever, generate_multi_queri
 from src.vectordb.qdrant_client import get_qdrant_client
 from src.llm.local_llm import get_llm
 from src.prompt.legal_prompt import get_legal_prompt
-from src.utils.config import LLM_PROVIDER
+from src.utils.config import LLM_PROVIDER, USE_MULTI_QUERY
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
@@ -35,7 +35,11 @@ def evaluate_latency(experiment_name: str, retriever, llm, prompt, dataset: list
         t0 = time.time()
         
         # 1. Đo Retrieval
-        queries = generate_multi_queries(question, llm)
+        if USE_MULTI_QUERY:
+            queries = generate_multi_queries(question, llm)
+        else:
+            queries = [question]
+            
         retrieved_docs = retriever.retrieve_multi(queries)
         t1 = time.time()
         
@@ -81,11 +85,9 @@ def main():
         random.seed(42)
         dataset = random.sample(dataset, SAMPLE_SIZE)
         
-    print(f"📚 Đã tải {len(dataset)} câu hỏi (Sample) từ {dataset_path}")
+    print(f"Đã tải {len(dataset)} câu hỏi (Sample) từ {dataset_path}")
     
-    # ---------------------------------------------
     # SETUP COMPONENT
-    # ---------------------------------------------
     qdrant = get_qdrant_client()
     retriever = get_ensemble_retriever(qdrant)
     
@@ -106,7 +108,7 @@ def main():
     
     # IN BÁO CÁO
     print("\n" + "="*70)
-    print("⏱️ BẢNG TỔNG SẮP ĐỘ TRỄ (LATENCY)")
+    print("BẢNG TỔNG SẮP ĐỘ TRỄ (LATENCY)")
     print("="*70)
     
     header = f"{'KỊCH BẢN':<35} | {'RETRIEVAL (s)':<13} | {'GENERATION (s)':<14} | {'TOTAL (s)':<10}"

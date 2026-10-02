@@ -35,10 +35,13 @@ def main():
     import random
     random.seed(42)
     sample_data = random.sample(raw_data, min(10, len(raw_data)))
-    
-    # 2. Sinh câu trả lời từ Hệ thống RAG của bạn
-    print("🚀 Đang chạy hệ thống RAG để lấy câu trả lời...")
+
     process_func, qa_chain = build_rag_chain()
+    
+    # Chuẩn bị danh sách API Keys Fallback
+    api_keys_str = os.getenv("GEMINI_API_KEYS_FALLBACK", os.getenv("GEMINI_API_KEY", ""))
+    fallback_keys = [k.strip() for k in api_keys_str.split(",") if k.strip()]
+    current_key_idx = 0
     
     questions = []
     answers = []
@@ -50,9 +53,26 @@ def main():
         # Chạy Retrieval
         processed = process_func({"input": q})
         retrieved_docs = processed['context']  # Trích xuất list documents gốc
-        
-        # Chạy Generation
-        ans = qa_chain.invoke(processed)
+        # Chạy Generation có Retry và Auto-Rotate API Key
+        max_retries = 5
+        ans = ""
+        for attempt in range(max_retries):
+            try:
+                ans = qa_chain.invoke(processed)
+                break
+            except Exception as e:
+                error_msg = str(e).lower()
+                if ('429' in error_msg or 'quota' in error_msg or 'exhausted' in error_msg) and len(fallback_keys) > 1:
+                    current_key_idx = (current_key_idx + 1) % len(fallback_keys)
+                    new_key = fallback_keys[current_key_idx]
+                    os.environ["GEMINI_API_KEY"] = new_key
+                    print(f"\n[QUOTA EXHAUSTED] Đã hết Quota! Chuyển sang API Key thứ {current_key_idx + 1}...")
+                    process_func, qa_chain = build_rag_chain() # Rebuild lại chain với Key mới
+                    time.sleep(2)
+                    continue
+                
+                print(f"Lỗi API: Chờ 30s thử lại... ({attempt+1}/{max_retries})")
+                time.sleep(30)
         
         questions.append(q)
         answers.append(ans)
@@ -79,7 +99,6 @@ def main():
     
     # Ragas cần thêm 1 Embedding model để đo Answer Relevancy.
     # Thay vì tốn tiền API, ta tái sử dụng luôn model Embedding Local bạn đang có sẵn. Miễn phí 100%!
-    print("⏳ Đang load Local Embedding cho Ragas...")
     evaluator_embeddings = HuggingFaceEmbeddings(
         model_name="intfloat/multilingual-e5-small", # Hoặc BAAI/bge-m3 tùy ý
         model_kwargs={'device': 'cpu'},
@@ -102,7 +121,7 @@ def main():
     )
     
     print("\n" + "="*50)
-    print("🏆 KẾT QUẢ ĐÁNH GIÁ LLM BẰNG RAGAS")
+    print("KẾT QUẢ ĐÁNH GIÁ LLM")
     print("="*50)
     print(f"🔸 Faithfulness (Độ trung thực)       : {round(result['faithfulness'], 4)}")
     print(f"🔸 Answer Relevancy (Độ đúng trọng tâm): {round(result['answer_relevancy'], 4)}")
