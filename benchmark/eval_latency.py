@@ -45,8 +45,9 @@ def evaluate_latency(experiment_name: str, retriever, llm, prompt, dataset: list
                 t1 = time.time()
                 break
             except Exception as e:
-                if '429' in str(e).lower() or 'quota' in str(e).lower():
-                    print(f"\n[CẢNH BÁO] API Rate Limit khi Retrieval. Chờ 30s...")
+                error_msg = str(e).lower()
+                if '429' in error_msg or 'quota' in error_msg or 'exhausted' in error_msg or '503' in error_msg or 'unavailable' in error_msg:
+                    print(f"\n[CẢNH BÁO] Kẹt API hoặc Server quá tải (Lần {attempt+1}/5). Chờ 30s...")
                     time.sleep(30)
                 else:
                     raise e
@@ -60,8 +61,9 @@ def evaluate_latency(experiment_name: str, retriever, llm, prompt, dataset: list
                 t2 = time.time()
                 break
             except Exception as e:
-                if '429' in str(e).lower() or 'quota' in str(e).lower():
-                    print(f"\n[CẢNH BÁO] API Rate Limit khi Generation. Chờ 30s...")
+                error_msg = str(e).lower()
+                if '429' in error_msg or 'quota' in error_msg or 'exhausted' in error_msg or '503' in error_msg or 'unavailable' in error_msg:
+                    print(f"\n[CẢNH BÁO] Kẹt API hoặc Server quá tải (Lần {attempt+1}/5). Chờ 30s...")
                     time.sleep(30)
                 else:
                     raise e
