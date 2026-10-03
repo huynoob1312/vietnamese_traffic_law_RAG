@@ -112,10 +112,10 @@ def main():
         # Đảm bảo 2 mảng bằng nhau
         ground_truth_ids = []
         for src, dieu in zip(raw_sources, raw_dieus):
-            src_normalized = str(src).replace('\\', '/')
-            ground_truth_ids.append(f"{src_normalized}_{str(dieu)}")
+            src_basename = os.path.basename(str(src).replace('\\', '/'))
+            ground_truth_ids.append(f"{src_basename}_{str(dieu)}")
         
-        raw_retrieved_ids = [f"{d.metadata.get('source', '').replace('\\', '/')}_{str(d.metadata.get('dieu', ''))}" for d in retrieved_docs]
+        raw_retrieved_ids = [f"{os.path.basename(d.metadata.get('source', '').replace('\\', '/'))}_{str(d.metadata.get('dieu', ''))}" for d in retrieved_docs]
         
         # Loại bỏ các ID trùng lặp (vì nhiều chunk có thể thuộc cùng 1 Điều) nhưng vẫn giữ đúng thứ tự
         seen_ids = set()
