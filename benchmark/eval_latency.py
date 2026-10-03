@@ -19,14 +19,10 @@ from src.utils.config import LLM_PROVIDER, USE_MULTI_QUERY
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
-def evaluate_latency(experiment_name: str, retriever, llm, prompt, dataset: list) -> dict:
+def evaluate_latency(experiment_name: str, retriever, llm, dataset: list) -> dict:
     print(f"\n{'='*60}\n RUNNING LATENCY EVAL: {experiment_name}\n{'='*60}")
     
-    answer_chain = prompt | llm | StrOutputParser()
-    
     retrieval_times = []
-    generation_times = []
-    total_times = []
     
     for item in tqdm(dataset, desc="Evaluating Latency"):
         question = item['question']
@@ -52,37 +48,15 @@ def evaluate_latency(experiment_name: str, retriever, llm, prompt, dataset: list
                 else:
                     raise e
         
-        # 2. Đo Generation
-        context = format_docs(retrieved_docs)
-        for attempt in range(5):
-            try:
-                t_gen_start = time.time()
-                answer = answer_chain.invoke({'context': context, 'input': question})
-                t2 = time.time()
-                break
-            except Exception as e:
-                error_msg = str(e).lower()
-                if '429' in error_msg or 'quota' in error_msg or 'exhausted' in error_msg or '503' in error_msg or 'unavailable' in error_msg:
-                    print(f"\n[CẢNH BÁO] Kẹt API hoặc Server quá tải (Lần {attempt+1}/5). Chờ 30s...")
-                    time.sleep(30)
-                else:
-                    raise e
-        
         retrieval_times.append(t1 - t0)
-        generation_times.append(t2 - t_gen_start)
-        total_times.append((t1 - t0) + (t2 - t_gen_start))
                 
     # Trả về kết quả
     res = {
         "Kịch bản": experiment_name,
-        "Retrieval (s)": round(np.mean(retrieval_times), 3),
-        "Generation (s)": round(np.mean(generation_times), 3),
-        "Total (s)": round(np.mean(total_times), 3)
+        "Latency (s)": round(np.mean(retrieval_times), 3)
     }
     
-    print(f"Retrieval Latency: {res['Retrieval (s)']} s")
-    print(f"Generation Latency: {res['Generation (s)']} s")
-    print(f"Total Latency: {res['Total (s)']} s")
+    print(f"Average Latency: {res['Latency (s)']} s")
     
     return res
 
@@ -112,7 +86,6 @@ def main():
     retriever = get_ensemble_retriever(qdrant)
     
     llm = get_llm()
-    prompt = get_legal_prompt(LLM_PROVIDER)
     
     all_results = []
     
@@ -120,7 +93,6 @@ def main():
         experiment_name="Cấu hình hiện tại (từ config.yaml)", 
         retriever=retriever, 
         llm=llm, 
-        prompt=prompt, 
         dataset=dataset
     )
     all_results.append(res_1)
@@ -130,12 +102,12 @@ def main():
     print("BẢNG TỔNG SẮP ĐỘ TRỄ (LATENCY)")
     print("="*70)
     
-    header = f"{'KỊCH BẢN':<35} | {'RETRIEVAL (s)':<13} | {'GENERATION (s)':<14} | {'TOTAL (s)':<10}"
+    header = f"{'KỊCH BẢN':<35} | {'LATENCY (s)':<13}"
     print(header)
-    print("-" * 70)
+    print("-" * 50)
     for res in all_results:
-        print(f"{res['Kịch bản']:<35} | {res['Retrieval (s)']:<13} | {res['Generation (s)']:<14} | {res['Total (s)']:<10}")
-    print("="*70)
+        print(f"{res['Kịch bản']:<35} | {res['Latency (s)']:<13}")
+    print("="*50)
 
 if __name__ == "__main__":
     main()
