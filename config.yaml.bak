@@ -1,0 +1,20 @@
+qdrant:
+  collection_name: legal_docs_vietnamese_bi_encoder
+models:
+  embedding: bkai-foundation-models/vietnamese-bi-encoder
+  llm: qwen2.5:3b
+chunking:
+  thresh_dieu: 600
+  thresh_khoan_default: 500
+  min_chunk: 30
+  min_chunk_diem: 5
+retrieval:
+  search_type: hybrid
+  top_k: 7
+  use_reranker: false
+  reranker_model: BAAI/bge-reranker-v2-m3
+  top_k_raw: 25
+llm_params:
+  provider: gemini
+  model: gemini-3.6-flash
+  temperature: 0.1
