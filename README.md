@@ -71,22 +71,20 @@ npm install
 
 ## 💻 Running the Application
 
-You need to run both the Backend and Frontend servers concurrently.
+Because FastAPI is configured to serve the React frontend natively, you only need to run the application on a single port (8000).
 
-**Terminal 1: Start the Backend Server**
+1. **Build the Frontend (Only needed when UI code changes):**
 ```bash
-# From the root directory
+cd frontend
+npm run build
+cd ..
+```
+
+2. **Start the Server:**
+```bash
 python main.py
 ```
-*The backend API will run on http://localhost:8000.*
-
-**Terminal 2: Start the Frontend Server**
-```bash
-# From the frontend directory
-cd frontend
-npm run dev
-```
-*The frontend UI will run on http://localhost:5173 (or the port specified by Vite). Open this link in your browser to interact with the AI.*
+*The entire application (both UI and API) will be served seamlessly at 👉 **http://localhost:8000**.*
 
 ---
 
