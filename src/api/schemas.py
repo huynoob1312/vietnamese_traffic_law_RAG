@@ -122,7 +122,6 @@ class QdrantConfig(BaseModel):
 
 class ModelsConfig(BaseModel):
     embedding: str
-    llm: str
 
 
 class ChunkingConfig(BaseModel):

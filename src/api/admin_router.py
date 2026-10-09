@@ -128,7 +128,6 @@ def update_system_config(
     if request.models:
         current_cfg["models"] = {
             "embedding": request.models.embedding,
-            "llm": request.models.llm,
         }
 
     # 4. Ghi đè an toàn vào config.yaml
