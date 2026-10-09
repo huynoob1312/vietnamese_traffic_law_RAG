@@ -9,6 +9,7 @@ import src.utils.config as cfg
 from pyvi import ViTokenizer
 from sentence_transformers import CrossEncoder
 from langchain_community.retrievers import BM25Retriever
+import torch
 
 import os
 import pickle
@@ -65,8 +66,12 @@ def get_ensemble_retriever(qdrant):
     bm25_retriever.k = cfg.TOP_K_RAW
 
     reranker = None
-    if cfg.USE_RERANKER:
-        reranker = CrossEncoder(cfg.RERANKER_MODEL)
+    reranker_batch_size = 32
+    if USE_RERANKER:
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        reranker = CrossEncoder(RERANKER_MODEL, device=device)
+        # Bóp nhỏ Batch Size xuống 8 để tránh tạo ra cục rác VRAM 864MB gây tràn bộ nhớ
+        reranker_batch_size = 8 if device == 'cuda' else 8
 
     # 3. Custom Retriever (RRF/Reranker + Sibling Enrichment)
     class CustomEnsembleRetriever:
@@ -91,7 +96,7 @@ def get_ensemble_retriever(qdrant):
                 
                 # Chấm điểm toàn bộ bằng Reranker
                 pairs = [[queries[0], doc.page_content] for doc in raw_candidates]
-                scores = reranker.predict(pairs)
+                scores = reranker.predict(pairs, batch_size=reranker_batch_size)
                 
                 # Sắp xếp lại và lấy TOP_K
                 scored_docs = list(zip(raw_candidates, scores))

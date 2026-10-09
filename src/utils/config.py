@@ -13,8 +13,8 @@ with open(config_path, "r", encoding="utf-8") as file:
 
 QDRANT_COLLECTION = config["qdrant"]["collection_name"]
 EMBEDDING_MODEL = config["models"]["embedding"]
-LLM_PROVIDER = config.get("llm_params", {}).get("provider", "ollama")
-LLM_MODEL = config.get("llm_params", {}).get("model", config["models"]["llm"])
+LLM_PROVIDER = config.get("llm_params", {}).get("provider", "gemini")
+LLM_MODEL = config.get("llm_params", {}).get("model", "gemini-3.6-flash")
 LLM_TEMPERATURE = config.get("llm_params", {}).get("temperature", 0.1)
 
 # Hyperparameters
@@ -25,6 +25,7 @@ MIN_CHUNK_DIEM = config.get("chunking", {}).get("min_chunk_diem", 5)
 
 TOP_K = config.get("retrieval", {}).get("top_k", 3)
 USE_RERANKER = config.get("retrieval", {}).get("use_reranker", False)
+USE_MULTI_QUERY = config.get("retrieval", {}).get("use_multi_query", False)
 RERANKER_MODEL = config.get("retrieval", {}).get("reranker_model", "BAAI/bge-reranker-base")
 TOP_K_RAW = config.get("retrieval", {}).get("top_k_raw", 20)
 SEARCH_TYPE = config.get("retrieval", {}).get("search_type", "hybrid")
@@ -72,3 +73,4 @@ JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "traffic-law-rag-secret-key-change-
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "10080"))
 
+BENCHMARK_DATASET_SIZE = config.get("benchmark", {}).get("dataset_size", "sample")

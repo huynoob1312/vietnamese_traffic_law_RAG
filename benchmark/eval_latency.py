@@ -14,51 +14,49 @@ from src.retrieval.rag_chain import get_ensemble_retriever, generate_multi_queri
 from src.vectordb.qdrant_client import get_qdrant_client
 from src.llm.local_llm import get_llm
 from src.prompt.legal_prompt import get_legal_prompt
-from src.utils.config import LLM_PROVIDER
+from src.utils.config import LLM_PROVIDER, USE_MULTI_QUERY
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
-def evaluate_latency(experiment_name: str, retriever, llm, prompt, dataset: list) -> dict:
-    print(f"\n{'='*60}\n🚀 RUNNING LATENCY EVAL: {experiment_name}\n{'='*60}")
-    
-    answer_chain = prompt | llm | StrOutputParser()
+def evaluate_latency(experiment_name: str, retriever, llm, dataset: list) -> dict:
+    print(f"\n{'='*60}\n RUNNING LATENCY EVAL: {experiment_name}\n{'='*60}")
     
     retrieval_times = []
-    generation_times = []
-    total_times = []
     
     for item in tqdm(dataset, desc="Evaluating Latency"):
         question = item['question']
         is_trap = item.get('is_trap', False)
         
-        t0 = time.time()
-        
         # 1. Đo Retrieval
-        queries = generate_multi_queries(question, llm)
-        retrieved_docs = retriever.retrieve_multi(queries)
-        t1 = time.time()
-        
-        # 2. Đo Generation
-        context = format_docs(retrieved_docs)
-        answer = answer_chain.invoke({'context': context, 'input': question})
-        t2 = time.time()
+        for attempt in range(5):
+            try:
+                t0 = time.time()
+                if USE_MULTI_QUERY:
+                    queries = generate_multi_queries(question, llm)
+                else:
+                    queries = [question]
+                    
+                retrieved_docs = retriever.retrieve_multi(queries)
+                t1 = time.time()
+                break
+            except Exception as e:
+                error_msg = str(e).lower()
+                if '429' in error_msg or 'quota' in error_msg or 'exhausted' in error_msg or '503' in error_msg or 'unavailable' in error_msg:
+                    print(f"\n[CẢNH BÁO] Kẹt API hoặc Server quá tải (Lần {attempt+1}/5). Chờ 30s...")
+                    time.sleep(30)
+                else:
+                    raise e
         
         retrieval_times.append(t1 - t0)
-        generation_times.append(t2 - t1)
-        total_times.append(t2 - t0)
                 
     # Trả về kết quả
     res = {
         "Kịch bản": experiment_name,
-        "Retrieval (s)": round(np.mean(retrieval_times), 3),
-        "Generation (s)": round(np.mean(generation_times), 3),
-        "Total (s)": round(np.mean(total_times), 3)
+        "Latency (s)": round(np.mean(retrieval_times), 3)
     }
     
-    print(f"Retrieval Latency: {res['Retrieval (s)']} s")
-    print(f"Generation Latency: {res['Generation (s)']} s")
-    print(f"Total Latency: {res['Total (s)']} s")
+    print(f"Average Latency: {res['Latency (s)']} s")
     
     return res
 
@@ -81,40 +79,35 @@ def main():
         random.seed(42)
         dataset = random.sample(dataset, SAMPLE_SIZE)
         
-    print(f"📚 Đã tải {len(dataset)} câu hỏi (Sample) từ {dataset_path}")
+    print(f"Đã tải {len(dataset)} câu hỏi (Sample) từ {dataset_path}")
     
-    # ---------------------------------------------
     # SETUP COMPONENT
-    # ---------------------------------------------
     qdrant = get_qdrant_client()
     retriever = get_ensemble_retriever(qdrant)
     
     llm = get_llm()
-    prompt = get_legal_prompt(LLM_PROVIDER)
     
     all_results = []
     
-    # Bạn có thể gọi evaluate_latency nhiều lần với các llm, prompt khác nhau ở đây
     res_1 = evaluate_latency(
         experiment_name="Cấu hình hiện tại (từ config.yaml)", 
         retriever=retriever, 
         llm=llm, 
-        prompt=prompt, 
         dataset=dataset
     )
     all_results.append(res_1)
     
     # IN BÁO CÁO
     print("\n" + "="*70)
-    print("⏱️ BẢNG TỔNG SẮP ĐỘ TRỄ (LATENCY)")
+    print("BẢNG TỔNG SẮP ĐỘ TRỄ (LATENCY)")
     print("="*70)
     
-    header = f"{'KỊCH BẢN':<35} | {'RETRIEVAL (s)':<13} | {'GENERATION (s)':<14} | {'TOTAL (s)':<10}"
+    header = f"{'KỊCH BẢN':<35} | {'LATENCY (s)':<13}"
     print(header)
-    print("-" * 70)
+    print("-" * 50)
     for res in all_results:
-        print(f"{res['Kịch bản']:<35} | {res['Retrieval (s)']:<13} | {res['Generation (s)']:<14} | {res['Total (s)']:<10}")
-    print("="*70)
+        print(f"{res['Kịch bản']:<35} | {res['Latency (s)']:<13}")
+    print("="*50)
 
 if __name__ == "__main__":
     main()

@@ -28,3 +28,4 @@ pymysql
 cryptography
 bcrypt
 pyjwt
+rank_bm25
