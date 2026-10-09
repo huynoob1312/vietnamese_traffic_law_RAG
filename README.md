@@ -1,86 +1,140 @@
-# Vietnamese Traffic Law RAG System 🇻🇳
+# Vietnamese Traffic Law RAG System 🇻🇳 ⚖️
 
-A Retrieval-Augmented Generation (RAG) system specialized in answering questions about Vietnamese Traffic Law. This system uses a clean, industry-standard FastAPI architecture, integrating Qdrant Vector Database and Large Language Models (supports both **Google Gemini** and **Local Ollama**).
+An advanced, full-stack **Retrieval-Augmented Generation (RAG)** pipeline designed specifically for querying and reasoning over Vietnamese Traffic Laws. This system leverages state-of-the-art Information Retrieval techniques to provide highly accurate legal consultation through a modern web interface.
 
 ## 🌟 Key Features
-- **Standard FastAPI Architecture**: Clean separation of Routers, Schemas, and Dependency Injection.
-- **Qdrant Vector DB Integration**: Ultra-fast semantic search for legal texts.
-- **Streaming Support**: Emits tokens piece-by-piece (like ChatGPT) for enhanced User Experience (UX).
-- **LangSmith Tracing**: Full observability of the AI's Chain of Thought for easy debugging.
+
+*   **Hybrid Retrieval Architecture**: Fuses sparse term-matching (BM25) with dense semantic embeddings (`multilingual-e5-small`, `bge-m3`) using **Reciprocal Rank Fusion (RRF)** to handle both exact keyword matches and broad semantic queries.
+*   **Two-Stage Ranking (Cross-Encoder)**: Integrates `BAAI/bge-reranker-v2-m3` as a second-stage reranker, significantly boosting Retrieval Accuracy (Recall@10) on complex legal datasets.
+*   **Domain-Specific Semantic Chunking**: Parsers designed explicitly for Vietnamese legal document hierarchies (Article/Clause/Point - *Điều/Khoản/Điểm*), preserving context integrity for LLMs and minimizing hallucination.
+*   **Extensive Benchmarking Framework**: Includes automated evaluation scripts capable of measuring MAP, MRR, and Recall metrics against 1,500+ query-context pairs, featuring API rate-limit resilience.
+*   **Modern Full-Stack Integration**: 
+    *   **Backend**: Scalable FastAPI architecture with hot-reloadable configurations and MySQL database for chat history persistence.
+    *   **Frontend**: Responsive UI built with React.js, Vite, and Tailwind CSS, featuring an Admin Dashboard to monitor system stats and manage vector ingestion.
 
 ---
 
-## 🛠 Installation and Setup
+## 🛠 Tech Stack
 
-### 1. Install Dependencies
+*   **AI/ML & NLP**: LangChain, HuggingFace Transformers, Sentence-Transformers
+*   **Vector Database**: Qdrant Cloud
+*   **Relational Database**: MySQL (SQLAlchemy ORM)
+*   **LLM Providers**: Google Gemini API, Local Ollama (`qwen2.5`)
+*   **Backend**: Python, FastAPI, Uvicorn
+*   **Frontend**: React.js, Vite, Tailwind CSS
+
+---
+
+## 🚀 Installation and Setup
+
+### 1. Prerequisites
+*   **Python 3.10+**
+*   **Node.js 18+** (Required for the React frontend)
+*   **MySQL Server** (Running locally or remotely)
+*   **Qdrant Cloud Account** (For Vector DB)
+
+### 2. Clone the Repository
 ```bash
+git clone https://github.com/your-username/vietnamese_traffic_law_RAG.git
+cd vietnamese_traffic_law_RAG
+```
+
+### 3. Backend Setup (FastAPI)
+```bash
+# Install Python dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Environment Variables (.env)
-The project requires API Keys to connect to Qdrant and Google Gemini (if using Gemini). 
-
-Create a new file exactly named `.env` in the root directory of the project. Copy the template below into the file and replace the placeholders with your actual API keys:
-
+Create a `.env` file in the root directory:
 ```env
-# ----------------------------------------------------
-# 1. REQUIRED: Qdrant Cloud (Vector Database)
-# ----------------------------------------------------
-# Get your URL and API Key at: https://cloud.qdrant.io/
+# Vector Database
 QDRANT_URL="https://<your_cluster_id>.aws.cloud.qdrant.io"
 QDRANT_API_KEY="your_qdrant_api_key_here"
 
-# ----------------------------------------------------
-# 2. OPTIONAL: Google Gemini (If using Cloud LLM)
-# ----------------------------------------------------
-# Get your API Key at: https://aistudio.google.com/
+# LLM Providers (Add based on your config.yaml preference)
 GEMINI_API_KEY="your_gemini_api_key_here"
 
-# ----------------------------------------------------
-# 3. OPTIONAL: LangSmith (RAG Tracing)
-# ----------------------------------------------------
-# Get your credentials at: https://smith.langchain.com/
+# Observability (Optional)
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
 LANGCHAIN_API_KEY="your_langsmith_api_key_here"
 LANGCHAIN_PROJECT="RAG_Legal_VN"
 ```
-> ⚠️ **WARNING:** The `.env` file contains sensitive security keys and must NEVER be uploaded to GitHub. The system is already configured with `.gitignore` to prevent this file from being pushed.
 
-### 3. Choose your LLM Provider (config.yaml)
-You can easily switch between Google Gemini and Local Ollama by editing the `config.yaml` file in the root directory:
-
-```yaml
-llm_params:
-  provider: "gemini" # Change to "ollama" to use local models
-  model: "gemini-3.6-flash" # If using ollama, change to your local model name (e.g., "qwen2.5:3b")
-```
-*Note: If you choose "ollama", make sure you have the Ollama app running on your machine with the specified model pulled.*
-
-### 4. Data Ingestion
-If this is your first time running the project, you need to place your legal document files (Word, PDF) into the `data/` directory. After starting the server, call the `/api/ingest` endpoint to chunk the data and push it to Qdrant Cloud.
-
-### 5. Start the Web Server
+### 4. Frontend Setup (React/Vite)
 ```bash
-python main.py
+cd frontend
+npm install
 ```
-Once the message `Application startup complete` appears, open your browser and navigate to:
-👉 **http://localhost:8000/docs**
-
-Here, you will find a beautiful Swagger UI where you can easily test the Chat and Ingest APIs!
 
 ---
+
+## 💻 Running the Application
+
+You need to run both the Backend and Frontend servers concurrently.
+
+**Terminal 1: Start the Backend Server**
+```bash
+# From the root directory
+python main.py
+```
+*The backend API will run on http://localhost:8000.*
+
+**Terminal 2: Start the Frontend Server**
+```bash
+# From the frontend directory
+cd frontend
+npm run dev
+```
+*The frontend UI will run on http://localhost:5173 (or the port specified by Vite). Open this link in your browser to interact with the AI.*
+
+---
+
+## ⚙️ Configuration & Data Ingestion
+
+### Dynamic Configuration (`config.yaml`)
+You can control the entire behavior of the RAG pipeline via the Admin UI or by editing `config.yaml`. The system supports hot-reloading for most parameters:
+*   **Embedding Models**: Switch between `e5-small`, `bge-m3`, etc.
+*   **LLM Provider**: Toggle between `gemini` and `ollama`.
+*   **Retrieval**: Configure `search_type` (hybrid/vector/bm25), `top_k`, and turn the reranker on/off.
+
+### Ingesting Legal Documents
+1. Place your raw legal files (`.docx`, `.pdf`) inside the `data/` directory.
+2. Open the Web UI, navigate to the **Admin Dashboard**, and trigger the **Re-index / Ingest** process. The system will chunk the documents and push the vectors to Qdrant automatically in the background.
+
+---
+
+The system was evaluated on a custom benchmark dataset containing 1,500+ complex legal queries. Below is a comparison of different retrieval strategies and embedding models, measuring accuracy and latency:
+
+![Benchmark Results](assets/benchmark_results.png)
+
+*(Note: The metrics above were measured on Google Colab using a T4 GPU / CPU infrastructure. The Hybrid + Reranker pipeline yields the highest accuracy but requires more compute time).*
+
+To reproduce these results or run the evaluation pipeline on a new dataset:
+```bash
+python benchmark/run_benchmark.py
+```
+
+---
+
 ## 📂 Project Structure
-```
+```text
 RAG_legal/
-├── data/                  # Contains raw legal documents (Docx, PDF, etc.)
-├── scripts/               # Utility scripts for testing (chunking, retrieval)
+├── benchmark/             # Evaluation scripts, datasets, and checkpointing
+├── data/                  # Contains raw legal documents (.docx, .pdf)
+├── frontend/              # React/Vite web application source code
 ├── src/
-│   ├── api/               # API Source Code (Routes, Schemas, Dependencies)
-│   ├── ingestion/         # Document parsing and chunking logic
-│   ├── retrieval/         # RAG pipeline and retrieval logic
-│   ├── utils/             # Common utility functions
-│   └── vectordb/          # Qdrant connection configuration
-├── main.py                # Server entry point
-└── requirements.txt       # Python dependencies
+│   ├── api/               # FastAPI Routes, Schemas, Dependencies
+│   ├── db/                # MySQL Models and Database configurations
+│   ├── ingestion/         # Legal document chunking and parsing logic
+│   ├── llm/               # LLM integrations (Gemini, Ollama)
+│   ├── retrieval/         # Hybrid RAG pipeline and reranking logic
+│   ├── utils/             # Common utility functions & configurations
+│   └── vectordb/          # Qdrant connection and vector operations
+├── config.yaml            # Dynamic runtime configuration for the system
+├── main.py                # FastAPI server entry point
+└── requirements.txt       # Python backend dependencies
 ```
+
+---
+*Developed as an advanced Information Retrieval & AI reasoning project.*
