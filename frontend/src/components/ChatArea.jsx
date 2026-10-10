@@ -36,7 +36,7 @@ export default function ChatArea() {
               Tra cứu Luật Giao thông Việt Nam
             </h1>
             <p className="text-sm text-ash-gray max-w-md mx-auto leading-relaxed">
-              Truy vấn chính xác theo Luật Đường bộ số 35/2024/QH15 và Luật Trật tự, an toàn giao thông đường bộ số 36/2024/QH15 kèm căn cứ Điều, Khoản cụ thể.
+              Truy vấn chính xác theo Luật giao thông đường bộ 2024-2026 kèm căn cứ Điều, Khoản cụ thể.
             </p>
           </div>
 

@@ -124,11 +124,10 @@ export default function AdminIngestionTab() {
       {/* Toast Alert */}
       {toast && (
         <div
-          className={`p-3 rounded-card text-xs flex items-center justify-between border ${
-            toast.type === 'success'
+          className={`p-3 rounded-card text-xs flex items-center justify-between border ${toast.type === 'success'
               ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
               : 'bg-red-50 border-red-200 text-red-800'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2">
             {toast.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
@@ -156,7 +155,7 @@ export default function AdminIngestionTab() {
                 Đồng bộ & Re-index Cơ sở Dữ liệu Vector Qdrant
               </h3>
               <p className="text-[11px] text-stone mt-0.5">
-                Chạy toàn bộ luồng Ingestion (Load văn bản $\rightarrow$ Chunking theo Điều/Khoản $\rightarrow$ Đẩy Vector vào Qdrant)
+                Chạy toàn bộ luồng Ingestion (Load văn bản → Chunking theo Điều/Khoản → Đẩy Vector vào Qdrant)
               </p>
             </div>
           </div>
@@ -165,11 +164,10 @@ export default function AdminIngestionTab() {
             type="button"
             onClick={handleTriggerIngest}
             disabled={isRunning || triggeringIngest}
-            className={`px-4 py-2 rounded-pill text-xs font-medium flex items-center gap-1.5 transition-all shadow-subtle ${
-              isRunning
+            className={`px-4 py-2 rounded-pill text-xs font-medium flex items-center gap-1.5 transition-all shadow-subtle ${isRunning
                 ? 'bg-amber-100 text-amber-800 cursor-not-allowed'
                 : 'bg-deep-teal hover:bg-deep-teal/90 text-white active:scale-[0.99]'
-            }`}
+              }`}
           >
             {isRunning ? (
               <>
@@ -187,27 +185,25 @@ export default function AdminIngestionTab() {
 
         {/* Ingest Status Box */}
         <div
-          className={`p-3 rounded-card border text-xs flex flex-col md:flex-row md:items-center justify-between gap-2 ${
-            isRunning
+          className={`p-3 rounded-card border text-xs flex flex-col md:flex-row md:items-center justify-between gap-2 ${isRunning
               ? 'bg-amber-50/70 border-amber-200 text-amber-900'
               : ingestStatus.status === 'completed'
-              ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
-              : ingestStatus.status === 'failed'
-              ? 'bg-red-50/70 border-red-200 text-red-900'
-              : 'bg-aged-paper border-pebble text-charcoal'
-          }`}
+                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                : ingestStatus.status === 'failed'
+                  ? 'bg-red-50/70 border-red-200 text-red-900'
+                  : 'bg-aged-paper border-pebble text-charcoal'
+            }`}
         >
           <div className="flex items-center gap-2">
             <span
-              className={`w-2 h-2 rounded-full ${
-                isRunning
+              className={`w-2 h-2 rounded-full ${isRunning
                   ? 'bg-amber-500 animate-ping'
                   : ingestStatus.status === 'completed'
-                  ? 'bg-emerald-500'
-                  : ingestStatus.status === 'failed'
-                  ? 'bg-red-500'
-                  : 'bg-stone'
-              }`}
+                    ? 'bg-emerald-500'
+                    : ingestStatus.status === 'failed'
+                      ? 'bg-red-500'
+                      : 'bg-stone'
+                }`}
             />
             <span className="font-medium capitalize">
               Trạng thái: {ingestStatus.status === 'idle' ? 'Sẵn sàng' : ingestStatus.status}
@@ -263,9 +259,8 @@ export default function AdminIngestionTab() {
 
           <label
             htmlFor="admin-doc-upload"
-            className={`px-4 py-2 rounded-pill bg-white hover:bg-subtle-fill border border-pebble text-xs font-medium text-charcoal cursor-pointer shadow-subtle transition-all active:scale-[0.99] flex items-center gap-1.5 ${
-              uploading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`px-4 py-2 rounded-pill bg-white hover:bg-subtle-fill border border-pebble text-xs font-medium text-charcoal cursor-pointer shadow-subtle transition-all active:scale-[0.99] flex items-center gap-1.5 ${uploading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             {uploading ? (
               <>
