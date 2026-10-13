@@ -70,10 +70,8 @@ def get_ensemble_retriever(qdrant):
     if USE_RERANKER:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         reranker = CrossEncoder(RERANKER_MODEL, device=device)
-        # Bóp nhỏ Batch Size xuống 8 để tránh tạo ra cục rác VRAM 864MB gây tràn bộ nhớ
         reranker_batch_size = 8 if device == 'cuda' else 8
 
-    # Custom Retriever (RRF/Reranker + Sibling Enrichment)
     class CustomEnsembleRetriever:
         def retrieve_multi(self, queries: list[str]):
             all_lists = []
@@ -111,8 +109,6 @@ def get_ensemble_retriever(qdrant):
                 if not source or not dieu:
                     continue
                     
-                # Lấy TOÀN BỘ các chunks khác nằm trong cùng một Điều (Sibling Chunks)
-                # Vì dieu_index được add tuần tự, nên thứ tự của siblings đã chuẩn theo văn bản gốc
                 siblings = dieu_index.get((source, dieu), [])
                 
                 for sib in siblings:
