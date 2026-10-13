@@ -86,23 +86,15 @@ def get_ensemble_retriever(qdrant):
                     all_lists.append(f.result())
                     
             if USE_RERANKER and reranker is not None:
+                # 1. Dùng RRF gộp nhanh trên RAM và chỉ lấy Top 40 ứng viên sáng giá nhất
                 candidates_top40 = reciprocal_rank_fusion(all_lists)[:40]
-
-                raw_candidates = []
-                seen = set()
-                # for lst in all_lists:
-                for lst in candidates_top40:
-                    for doc in lst:
-                        if doc.page_content not in seen:
-                            raw_candidates.append(doc)
-                            seen.add(doc.page_content)
                 
-                # Chấm điểm toàn bộ bằng Reranker
-                pairs = [[queries[0], doc.page_content] for doc in raw_candidates]
+                # 2. Reranker chỉ việc chấm điểm 40 chunks này
+                pairs = [[queries[0], doc.page_content] for doc in candidates_top40]
                 scores = reranker.predict(pairs, batch_size=reranker_batch_size)
                 
-                # Sắp xếp lại và lấy TOP_K
-                scored_docs = list(zip(raw_candidates, scores))
+                # 3. Sắp xếp lại và lấy TOP_K
+                scored_docs = list(zip(candidates_top40, scores))
                 scored_docs.sort(key=lambda x: x[1], reverse=True)
                 fused_docs = [doc for doc, score in scored_docs][:TOP_K]
             else:
