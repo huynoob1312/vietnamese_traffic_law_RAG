@@ -165,10 +165,7 @@ def build_rag_chain():
         original_query = inputs["input"]
         
         queries = generate_multi_queries(original_query, llm)
-        
-        # Gọi Global RRF bằng hàm retrieve_multi
         final_docs = retriever.retrieve_multi(queries)
-        
         context = format_docs(final_docs)
         
         return {
