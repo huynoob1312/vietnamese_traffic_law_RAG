@@ -73,7 +73,7 @@ def get_ensemble_retriever(qdrant):
         # Bóp nhỏ Batch Size xuống 8 để tránh tạo ra cục rác VRAM 864MB gây tràn bộ nhớ
         reranker_batch_size = 8 if device == 'cuda' else 8
 
-    # 3. Custom Retriever (RRF/Reranker + Sibling Enrichment)
+    # Custom Retriever (RRF/Reranker + Sibling Enrichment)
     class CustomEnsembleRetriever:
         def retrieve_multi(self, queries: list[str]):
             all_lists = []
@@ -86,19 +86,15 @@ def get_ensemble_retriever(qdrant):
                     all_lists.append(f.result())
                     
             if USE_RERANKER and reranker is not None:
-                # 1. Dùng RRF gộp nhanh trên RAM và chỉ lấy Top 40 ứng viên sáng giá nhất
                 candidates_top40 = reciprocal_rank_fusion(all_lists)[:40]
                 
-                # 2. Reranker chỉ việc chấm điểm 40 chunks này
                 pairs = [[queries[0], doc.page_content] for doc in candidates_top40]
                 scores = reranker.predict(pairs, batch_size=reranker_batch_size)
-                
-                # 3. Sắp xếp lại và lấy TOP_K
                 scored_docs = list(zip(candidates_top40, scores))
                 scored_docs.sort(key=lambda x: x[1], reverse=True)
                 fused_docs = [doc for doc, score in scored_docs][:TOP_K]
             else:
-                # RRF toàn cục (Global RRF) nếu KHÔNG dùng Reranker
+
                 fused_docs = reciprocal_rank_fusion(all_lists)[:TOP_K]
              
             enriched_docs = []
