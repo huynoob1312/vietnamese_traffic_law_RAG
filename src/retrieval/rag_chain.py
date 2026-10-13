@@ -86,9 +86,12 @@ def get_ensemble_retriever(qdrant):
                     all_lists.append(f.result())
                     
             if USE_RERANKER and reranker is not None:
+                candidates_top40 = reciprocal_rank_fusion(all_lists)[:40]
+
                 raw_candidates = []
                 seen = set()
-                for lst in all_lists:
+                # for lst in all_lists:
+                for lst in candidates_top40:
                     for doc in lst:
                         if doc.page_content not in seen:
                             raw_candidates.append(doc)
