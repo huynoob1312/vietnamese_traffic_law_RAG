@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useChat } from '../context/ChatContext';
 import SearchInput from './SearchInput';
 import CitationCard from './CitationCard';
+import MarkdownContent from './MarkdownContent';
 import { Sparkles, User, Bot } from 'lucide-react';
 
 const SUGGESTIONS = [
@@ -108,12 +109,11 @@ export default function ChatArea() {
                             <div className="h-2.5 bg-skeleton-bar rounded-pill animate-shimmer w-5/6" />
                           </div>
                         ) : (
-                          <div className="whitespace-pre-wrap space-y-2 font-normal">
-                            {msg.content}
-                            {isLastAi && isStreaming && (
-                              <span className="inline-block w-1.5 h-4 ml-1 bg-deep-teal align-middle animate-pulse" />
-                            )}
-                          </div>
+                          <MarkdownContent
+                            content={msg.content}
+                            isStreaming={isStreaming}
+                            isLastAi={isLastAi}
+                          />
                         )}
 
                         {/* Citations Drawer */}

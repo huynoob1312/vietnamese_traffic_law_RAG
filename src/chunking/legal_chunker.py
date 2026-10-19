@@ -128,8 +128,6 @@ class LegalDocumentChunker:
 
         file_name = os.path.basename(doc_meta.get("source", "Không rõ nguồn"))
         
-        # Dịch tên file (Ví dụ: 35_2024_QH15_588811.docx -> Luật số 35/2024/QH15)
-        # Giúp Tokenizer (BM25) bắt chuẩn 100% các từ khóa như "35", "2024"
         m = re.match(r"(\d+)_(\d+)_([A-Za-z0-9]+)", file_name)
         if m:
             so, nam, ky_hieu = m.groups()
