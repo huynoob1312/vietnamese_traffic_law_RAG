@@ -168,9 +168,29 @@ def build_rag_chain():
         final_docs = retriever.retrieve_multi(queries)
         context = format_docs(final_docs)
         
+        citations = []
+        seen = set()
+        for doc in final_docs:
+            src = doc.metadata.get("source", "")
+            dieu = str(doc.metadata.get("dieu", "")).strip()
+            khoan = str(doc.metadata.get("khoan", "")).strip()
+            diem = str(doc.metadata.get("diem", "")).strip()
+            key = (src, dieu, khoan, diem)
+            if key not in seen:
+                seen.add(key)
+                doc_name = os.path.basename(src).replace(".docx", "").replace(".pdf", "")
+                citations.append({
+                    "source": doc_name,
+                    "dieu": dieu if dieu and dieu != "None" else "",
+                    "khoan": khoan if khoan and khoan != "None" else "",
+                    "diem": diem if diem and diem != "None" else "",
+                    "content": doc.page_content
+                })
+
         return {
             "context": context,
-            "input": original_query
+            "input": original_query,
+            "citations": citations
         }
 
     answer_chain = prompt | llm | StrOutputParser()

@@ -3,25 +3,27 @@ import { BookOpen, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 
 export default function CitationCard({ citations }) {
   const [isOpen, setIsOpen] = useState(false);
+  const list = Array.isArray(citations) ? citations : (citations?.citations || []);
 
-  if (!citations || citations.length === 0) return null;
+  if (!list || list.length === 0) return null;
 
   return (
-    <div className="mt-3 pt-2 border-t border-pebble/60 text-xs">
-      {/* Toggle button */}
+    <div className="mt-3 pt-2.5 border-t border-pebble/60 text-xs">
+      {/* Toggle button - Use case: Xem nguồn luật tham chiếu */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-white hover:bg-subtle-fill border border-pebble text-charcoal font-medium transition-colors shadow-subtle"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill bg-white hover:bg-subtle-fill border border-pebble text-charcoal font-medium transition-all shadow-subtle hover:border-deep-teal/40 cursor-pointer"
+        title="Nhấn để xem danh sách tài liệu và nội dung chi tiết căn cứ pháp lý"
       >
         <BookOpen size={13} className="text-deep-teal" />
-        <span>Căn cứ pháp lý ({citations.length} nguồn tham chiếu)</span>
+        <span>Nguồn luật tham chiếu ({list.length} căn cứ)</span>
         {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
       </button>
 
-      {/* Expanded citation list */}
+      {/* Expanded citation list - Use cases: Hiển thị danh sách tài liệu & Hiển thị nội dung chi tiết */}
       {isOpen && (
-        <div className="mt-2.5 space-y-2 animate-in fade-in duration-200">
-          {citations.map((cite, index) => {
+        <div className="mt-3 space-y-2.5 animate-in fade-in duration-200">
+          {list.map((cite, index) => {
             const docName = cite.source || cite.document_name || 'Văn bản QPPL';
             const dieu = cite.dieu ? `Điều ${cite.dieu}` : '';
             const khoan = cite.khoan ? `Khoản ${cite.khoan}` : '';

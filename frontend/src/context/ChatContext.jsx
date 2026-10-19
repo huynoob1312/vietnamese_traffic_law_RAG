@@ -122,7 +122,10 @@ export function ChatProvider({ children }) {
           return next;
         });
       },
-      onCitations: (citationsList) => {
+      onCitations: (citationsData) => {
+        const citationsList = Array.isArray(citationsData)
+          ? citationsData
+          : (citationsData?.citations || []);
         setMessages((prev) => {
           if (prev.length === 0) return prev;
           const next = [...prev];
