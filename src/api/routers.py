@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import uuid
 from typing import Optional
@@ -15,6 +16,80 @@ from src.ingestion.docx_loader import load_and_chunk_data
 from src.vectordb.qdrant_client import push_to_qdrant
 
 router = APIRouter()
+
+def filter_citations_by_answer(citations: list[dict], answer: str) -> list[dict]:
+    """
+    Lọc danh sách citations để chỉ giữ lại đúng các Điều/Khoản mà AI thực sự trích dẫn trong câu trả lời.
+    """
+    if not citations or not answer:
+        return citations
+
+    # 1. Tìm tất cả các trích dẫn dạng (Nguồn: ...) do AI sinh ra
+    cite_matches = re.findall(r'Nguồn:\s*([^\)\*\n\r]+)', answer, re.IGNORECASE)
+
+    if not cite_matches:
+        # Nếu AI không sinh định dạng (Nguồn: ...), tìm các Điều luật được nhắc đến trong bài
+        dieu_matches = set(re.findall(r'Điều\s*(\d+)', answer, re.IGNORECASE))
+        if dieu_matches:
+            matched = [c for c in citations if str(c.get("dieu", "")).strip() in dieu_matches]
+            if matched:
+                return matched[:5]
+        return citations[:5]
+
+    target_specs = []
+    for c_text in cite_matches:
+        dieu = re.search(r'Điều\s*(\d+)', c_text, re.IGNORECASE)
+        khoan = re.search(r'Khoản\s*(\d+)', c_text, re.IGNORECASE)
+        diem = re.search(r'Điểm\s*([a-zđA-ZĐ])', c_text, re.IGNORECASE)
+        target_specs.append({
+            "dieu": dieu.group(1) if dieu else None,
+            "khoan": khoan.group(1) if khoan else None,
+            "diem": diem.group(1).lower() if diem else None,
+        })
+
+    matched = []
+    seen = set()
+
+    for spec in target_specs:
+        spec_dieu = spec["dieu"]
+        spec_khoan = spec["khoan"]
+        spec_diem = spec["diem"]
+
+        best_match = None
+        for c in citations:
+            c_dieu = str(c.get("dieu", "")).strip()
+            c_khoan = str(c.get("khoan", "")).strip()
+            c_diem = str(c.get("diem", "")).strip().lower()
+
+            if spec_dieu and c_dieu == spec_dieu:
+                if spec_khoan and spec_diem and c_khoan == spec_khoan and c_diem == spec_diem:
+                    best_match = c
+                    break
+                elif spec_khoan and c_khoan == spec_khoan and not best_match:
+                    best_match = c
+                elif not best_match and not spec_khoan:
+                    best_match = c
+
+        if best_match:
+            key = (best_match.get("source"), best_match.get("dieu"), best_match.get("khoan"), best_match.get("diem"))
+            if key not in seen:
+                seen.add(key)
+                matched.append(best_match)
+
+    # Nếu vẫn chưa tìm thấy chính xác, fallback tìm theo Điều
+    if not matched:
+        for spec in target_specs:
+            if spec["dieu"]:
+                for c in citations:
+                    if str(c.get("dieu", "")).strip() == spec["dieu"]:
+                        key = (c.get("source"), c.get("dieu"), c.get("khoan"), c.get("diem"))
+                        if key not in seen:
+                            seen.add(key)
+                            matched.append(c)
+                        if len(matched) >= 5:
+                            break
+
+    return matched if matched else citations[:5]
 
 
 @router.post("/chat", response_model=ChatResponse, tags=["Chat"])
@@ -41,6 +116,7 @@ async def chat(
             "input": processed.get("input", prompt_text)
         }
         answer = qa_chain.invoke(chain_input)
+        citations = filter_citations_by_answer(citations, answer)
 
         session_id = request.session_id
 
@@ -184,9 +260,10 @@ async def chat_stream(
                 yield f"event: delta\ndata: {json.dumps({'content': err_msg, 'text': err_msg})}\n\n"
 
             full_answer = "".join(full_ai_content)
+            final_citations = filter_citations_by_answer(citations, full_answer)
 
             # 3. Phát event citations
-            yield f"event: citations\ndata: {json.dumps({'citations': citations}, ensure_ascii=False)}\n\n"
+            yield f"event: citations\ndata: {json.dumps({'citations': final_citations}, ensure_ascii=False)}\n\n"
 
             # 4. Lưu câu trả lời AI vào DB nếu user đăng nhập
             if user_id and session_id:
@@ -196,7 +273,7 @@ async def chat_stream(
                         session_id=session_id,
                         role="ai",
                         content=full_answer,
-                        citations=citations
+                        citations=final_citations
                     )
                     save_db.add(ai_msg)
                     sess = save_db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
