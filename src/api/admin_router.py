@@ -217,6 +217,53 @@ def update_system_config(
     }
 
 
+@router.post("/config/restore")
+def restore_backup_config(admin: User = Depends(get_admin_user)):
+    """Khôi phục cấu hình từ file sao lưu gần nhất (config.yaml.bak)."""
+    bak_path = CONFIG_PATH + ".bak"
+    if not os.path.exists(bak_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy bản sao lưu config.yaml.bak để khôi phục."
+        )
+
+    try:
+        with open(bak_path, "r", encoding="utf-8") as f:
+            bak_content = f.read()
+
+        temp_current_content = ""
+        if os.path.exists(CONFIG_PATH):
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                temp_current_content = f.read()
+
+        with open(CONFIG_PATH, "w", encoding="utf-8", newline="\n") as f:
+            f.write(bak_content)
+
+        if temp_current_content:
+            with open(bak_path, "w", encoding="utf-8", newline="\n") as f:
+                f.write(temp_current_content)
+
+        # Hot-reload RAG pipeline
+        reload_config()
+        process_func, qa_chain = build_rag_chain()
+        rag_components["process"] = process_func
+        rag_components["chain"] = qa_chain
+
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            restored_cfg = yaml.safe_load(f)
+
+        return {
+            "status": "success",
+            "message": "Đã khôi phục thành công cấu hình từ bản sao lưu gần nhất (.bak)!",
+            "config": restored_cfg,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi khôi phục cấu hình: {str(e)}"
+        )
+
+
 # ==========================================
 # 2. Knowledge & Ingestion Management (Task 12)
 # ==========================================

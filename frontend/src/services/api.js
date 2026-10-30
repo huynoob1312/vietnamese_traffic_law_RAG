@@ -86,6 +86,10 @@ export const adminAPI = {
     const response = await api.put('/admin/config', configData);
     return response.data;
   },
+  restoreConfig: async () => {
+    const response = await api.post('/admin/config/restore');
+    return response.data;
+  },
   getDocuments: async () => {
     const response = await api.get('/admin/documents');
     return response.data;

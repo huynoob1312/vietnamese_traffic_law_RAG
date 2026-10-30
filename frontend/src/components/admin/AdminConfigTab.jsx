@@ -93,6 +93,34 @@ export default function AdminConfigTab() {
     return Object.keys(errs).length === 0;
   };
 
+  const handleRestore = async () => {
+    setSaving(true);
+    setToast(null);
+    try {
+      const res = await adminAPI.restoreConfig();
+      setConfig(res.config);
+      setToast({
+        type: 'success',
+        message: res.message || 'Đã khôi phục thành công cấu hình từ bản sao lưu gần nhất (.bak)!',
+      });
+    } catch (err) {
+      try {
+        await loadConfig();
+        setToast({
+          type: 'error',
+          message: err.response?.data?.detail || 'Không thể khôi phục bản sao lưu.',
+        });
+      } catch {
+        setToast({
+          type: 'error',
+          message: 'Lỗi kết nối khi tải cấu hình.',
+        });
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) {
@@ -463,11 +491,12 @@ export default function AdminConfigTab() {
       <div className="flex items-center justify-between pt-2">
         <button
           type="button"
-          onClick={loadConfig}
+          onClick={handleRestore}
           disabled={saving}
-          className="px-4 py-2 rounded-pill border border-pebble text-xs text-stone hover:text-charcoal hover:bg-subtle-fill transition-colors"
+          className="px-4 py-2 rounded-pill border border-pebble text-xs text-stone hover:text-charcoal hover:bg-subtle-fill transition-colors flex items-center gap-1.5 cursor-pointer"
         >
-          Khôi phục giá trị cũ
+          <RefreshCw size={13} className={saving ? 'animate-spin' : ''} />
+          Khôi phục bản sao lưu (.bak)
         </button>
 
         <button
