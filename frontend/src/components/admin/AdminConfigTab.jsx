@@ -118,6 +118,7 @@ export default function AdminConfigTab() {
         search_type: config.retrieval.search_type,
         top_k: parseInt(config.retrieval.top_k, 10),
         use_reranker: Boolean(config.retrieval.use_reranker),
+        use_multi_query: config.retrieval.use_multi_query !== undefined ? Boolean(config.retrieval.use_multi_query) : true,
         reranker_model: config.retrieval.reranker_model,
         top_k_raw: parseInt(config.retrieval.top_k_raw, 10),
       },
@@ -128,6 +129,7 @@ export default function AdminConfigTab() {
       },
       qdrant: config.qdrant,
       models: config.models,
+      benchmark: config.benchmark,
     };
 
     try {
@@ -257,7 +259,7 @@ export default function AdminConfigTab() {
             )}
           </div>
 
-          <div className="flex items-center gap-3 pt-4">
+          <div className="flex flex-wrap items-center gap-6 pt-4">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -267,6 +269,17 @@ export default function AdminConfigTab() {
               />
               <span className="text-xs font-medium text-charcoal">
                 Kích hoạt BAAI Reranker (use_reranker)
+              </span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={config.retrieval.use_multi_query ?? true}
+                onChange={(e) => handleChange('retrieval', 'use_multi_query', e.target.checked)}
+                className="w-4 h-4 text-deep-teal rounded border-pebble focus:ring-deep-teal"
+              />
+              <span className="text-xs font-medium text-charcoal">
+                Kích hoạt Multi-Query (use_multi_query)
               </span>
             </label>
           </div>

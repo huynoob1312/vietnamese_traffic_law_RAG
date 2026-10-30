@@ -33,6 +33,60 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
+def format_config_yaml(cfg: dict) -> str:
+    collection_name = cfg.get("qdrant", {}).get("collection_name", "legal_docs")
+    embedding = cfg.get("models", {}).get("embedding", "intfloat/multilingual-e5-small")
+    thresh_dieu = cfg.get("chunking", {}).get("thresh_dieu", 600)
+    thresh_khoan_default = cfg.get("chunking", {}).get("thresh_khoan_default", 500)
+    min_chunk = cfg.get("chunking", {}).get("min_chunk", 30)
+    min_chunk_diem = cfg.get("chunking", {}).get("min_chunk_diem", 5)
+
+    search_type = cfg.get("retrieval", {}).get("search_type", "hybrid")
+    top_k = cfg.get("retrieval", {}).get("top_k", 10)
+    use_reranker = str(cfg.get("retrieval", {}).get("use_reranker", False)).lower()
+    use_multi_query = str(cfg.get("retrieval", {}).get("use_multi_query", True)).lower()
+    reranker_model = cfg.get("retrieval", {}).get("reranker_model", "BAAI/bge-reranker-v2-m3")
+    top_k_raw = cfg.get("retrieval", {}).get("top_k_raw", 30)
+
+    provider = cfg.get("llm_params", {}).get("provider", "gemini")
+    model = cfg.get("llm_params", {}).get("model", "gemini-3.6-flash")
+
+    dataset_size = cfg.get("benchmark", {}).get("dataset_size", "sample")
+
+    yaml_text = f"""qdrant:
+  collection_name: "{collection_name}"
+  # collection_name: "legal_docs_bge"
+  # collection_name: "legal_docs_sbert" 
+  # collection_name: "legal_docs_vietnamese_bi_encoder" 
+
+models:
+  embedding: "{embedding}"
+  # embedding: "BAAI/bge-m3"
+  # embedding: "keepitreal/vietnamese-sbert"
+  # embedding: "bkai-foundation-models/vietnamese-bi-encoder"
+chunking:
+  thresh_dieu: {thresh_dieu}
+  thresh_khoan_default: {thresh_khoan_default}
+  min_chunk: {min_chunk}
+  min_chunk_diem: {min_chunk_diem}
+
+retrieval:
+  search_type: "{search_type}" # "hybrid", "bm25", "vector"
+  top_k: {top_k}
+  use_reranker: {use_reranker}
+  use_multi_query: {use_multi_query}
+  reranker_model: "{reranker_model}"
+  top_k_raw: {top_k_raw}
+
+llm_params:
+  provider: "{provider}" # "gemini" or "ollama"
+  model: "{model}" # "gemini-3.6-flash" or "qwen2.5:3b"
+
+benchmark:
+  dataset_size: "{dataset_size}" # "sample" (200 câu) hoặc "full" (1500 câu)
+"""
+    return yaml_text
+
 # Global Ingestion Background Task State
 ingest_state: Dict[str, Any] = {
     "status": "idle",  # "idle", "running", "completed", "failed"
@@ -111,6 +165,7 @@ def update_system_config(
         "search_type": request.retrieval.search_type,
         "top_k": request.retrieval.top_k,
         "use_reranker": request.retrieval.use_reranker,
+        "use_multi_query": request.retrieval.use_multi_query if request.retrieval.use_multi_query is not None else current_cfg.get("retrieval", {}).get("use_multi_query", True),
         "reranker_model": request.retrieval.reranker_model,
         "top_k_raw": request.retrieval.top_k_raw,
     }
@@ -129,11 +184,16 @@ def update_system_config(
         current_cfg["models"] = {
             "embedding": request.models.embedding,
         }
+    if request.benchmark:
+        current_cfg["benchmark"] = {"dataset_size": request.benchmark.dataset_size or "sample"}
+    elif "benchmark" not in current_cfg:
+        current_cfg["benchmark"] = {"dataset_size": "sample"}
 
-    # 4. Ghi đè an toàn vào config.yaml
+    # 4. Ghi đè an toàn vào config.yaml theo đúng định dạng chuẩn có chú thích
     try:
-        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-            yaml.dump(current_cfg, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+        formatted_yaml = format_config_yaml(current_cfg)
+        with open(CONFIG_PATH, "w", encoding="utf-8", newline="\n") as f:
+            f.write(formatted_yaml)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -135,6 +135,7 @@ class RetrievalConfig(BaseModel):
     search_type: str = Field("hybrid", pattern="^(hybrid|bm25|vector)$")
     top_k: int = Field(..., gt=0, le=50, description="Số kết quả lấy ra (1 - 50)")
     use_reranker: bool = False
+    use_multi_query: Optional[bool] = True
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
     top_k_raw: int = Field(..., gt=0, description="Số kết quả thô ban đầu (> 0)")
 
@@ -145,20 +146,27 @@ class LLMParamsConfig(BaseModel):
     temperature: Optional[float] = 0.1
 
 
+
+class BenchmarkConfig(BaseModel):
+    dataset_size: Optional[str] = "sample"
+
 class AppConfigResponse(BaseModel):
     qdrant: QdrantConfig
     models: ModelsConfig
     chunking: ChunkingConfig
     retrieval: RetrievalConfig
     llm_params: LLMParamsConfig
+    benchmark: Optional[BenchmarkConfig] = None
 
 
 class ConfigUpdateRequest(BaseModel):
     chunking: ChunkingConfig
     retrieval: RetrievalConfig
     llm_params: LLMParamsConfig
+    benchmark: Optional[BenchmarkConfig] = None
     qdrant: Optional[QdrantConfig] = None
     models: Optional[ModelsConfig] = None
+    benchmark: Optional[BenchmarkConfig] = None
 
     @model_validator(mode="after")
     def validate_top_k_raw(self):

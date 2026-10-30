@@ -34,7 +34,7 @@ def reload_config():
     """Tải lại nội dung file config.yaml và cập nhật các biến toàn cục."""
     global config, QDRANT_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, LLM_MODEL, LLM_TEMPERATURE
     global THRESH_DIEU, THRESH_KHOAN_DEFAULT, MIN_CHUNK, MIN_CHUNK_DIEM
-    global TOP_K, USE_RERANKER, RERANKER_MODEL, TOP_K_RAW, SEARCH_TYPE
+    global TOP_K, USE_RERANKER, USE_MULTI_QUERY, RERANKER_MODEL, TOP_K_RAW, SEARCH_TYPE, BENCHMARK_DATASET_SIZE
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
@@ -51,9 +51,11 @@ def reload_config():
 
     TOP_K = config.get("retrieval", {}).get("top_k", 3)
     USE_RERANKER = config.get("retrieval", {}).get("use_reranker", False)
+    USE_MULTI_QUERY = config.get("retrieval", {}).get("use_multi_query", True)
     RERANKER_MODEL = config.get("retrieval", {}).get("reranker_model", "BAAI/bge-reranker-v2-m3")
     TOP_K_RAW = config.get("retrieval", {}).get("top_k_raw", 20)
     SEARCH_TYPE = config.get("retrieval", {}).get("search_type", "hybrid")
+    BENCHMARK_DATASET_SIZE = config.get("benchmark", {}).get("dataset_size", "sample")
     return config
 
 # MySQL Configuration
